@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Local dependencies (keep in repo, not tracked)
+lib/
+vendor/
+site-packages/
+
+# Project runtime data
+blocklist.txt
+config.json
+
+# Local-only tracking (do not push)
+SESSION_STATE.md
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
