@@ -10,38 +10,43 @@ def _like(domains):
     return where, params
 
 
-def _url_ids(work, domains):
+def _url_ids(db_path, domains):
     where, params = _like(domains)
-    rows = db.read_rows(work, f"SELECT id FROM urls WHERE {where}", params)
+    rows = db.read_rows(db_path, f"SELECT id FROM urls WHERE {where}", params)
     return [r["id"] for r in rows]
 
 
 def scan(profile_dir, domains):
+    """Read-only scan. Returns matched URL count."""
     db_path = db.find_db_file(profile_dir, HISTORY_DB)
     if not db_path or not domains:
         return 0
-    work = db.make_working_copy(db_path) or db_path
-    return len(_url_ids(work, domains))
+    return len(_url_ids(db_path, domains))
 
 
 def clean(profile_dir, domains):
-    """Delete matching URLs and their visits. Returns total rows affected."""
+    """Delete matching URLs and their visits. Browsers must be closed.
+
+    Works directly on the live DB. Returns total rows affected.
+    """
     db_path = db.find_db_file(profile_dir, HISTORY_DB)
     if not db_path or not domains:
         return 0
-    work = db.make_working_copy(db_path) or db_path
-
-    ids = _url_ids(work, domains)
+    ids = _url_ids(db_path, domains)
     if not ids:
         return 0
-
-    id_marks = ",".join("?" * len(ids))
+    marks = ",".join("?" * len(ids))
     stmts = [
-        (f"DELETE FROM visits WHERE url IN ({id_marks})", tuple(ids)),
-        (f"DELETE FROM visit_source WHERE visit_id NOT IN (SELECT id FROM visits)", ()),
-        (f"DELETE FROM urls WHERE id IN ({id_marks})", tuple(ids)),
+        (f"DELETE FROM visits WHERE url IN ({marks})", tuple(ids)),
+        (f"DELETE FROM urls WHERE id IN ({marks})", tuple(ids)),
     ]
-    rows, err = db.execute_write(work, stmts)
-    if err is None:
-        db.vacuum_db(work)
+    rows, err = db.execute_write(db_path, stmts)
+    if not err:
+        db.vacuum_db(db_path)
+    elif "no such table: visits" in (err or ""):
+        # fallback for DBs without a visits table
+        only_urls = [(f"DELETE FROM urls WHERE id IN ({marks})", tuple(ids))]
+        rows, err = db.execute_write(db_path, only_urls)
+        if not err:
+            db.vacuum_db(db_path)
     return rows
