@@ -1,7 +1,6 @@
 """Integration tests: config, blocklist parser, engine scan, GUI build."""
 import os
 import shutil
-import sqlite3
 import sys
 import tempfile
 
@@ -44,36 +43,49 @@ def test_blocklist_parser():
         f.write("# comment line\n")
         f.write("127.0.0.1 site2.net\n")
         f.write("\n")
-        f.write("0.0.0.0 site3.org\n")
+        f.write("0.0.0.0 www.site3.org\n")
     domains = []
     for line in open(sample, encoding="utf-8"):
         m = bm._domain_re.match(line.strip())
         if m:
             domains.append(m.group(1).lower())
-    check("parses 3 domains, skips comment/blank", domains == ["site1.com", "site2.net", "site3.org"])
+    check("parses 3 domains, skips comment/blank", domains == ["site1.com", "site2.net", "www.site3.org"])
 
 
-def test_engine_scan(tmp_profiles):
+def test_engine_domains():
+    print("engine._domains_for")
+    from cleaner import engine
+    combined = engine._domains_for(["pornhub"], ["adultblock.com"])
+    check("domains combine keywords+blocklist as set",
+          "adultblock.com" in combined and "pornhub" in combined)
+
+
+def test_engine_synthetic_scan():
     print("engine.scan_all (synthetic profiles)")
-    from cleaner import browser_paths, engine
+    from cleaner import engine
 
-    # Build fake chrome profile dirs like "<base>/User Data/Default/History"
-    base = tmp_profiles
-    from cleaner.engine import _domains_for
-    combined = _domains_for(["pornhub"], ["adultblock.com"])
-    check("domains combine keywords+blocklist", "pornhub" in combined and "adultblock.com" in combined)
+    tmp = os.path.join(tempfile.gettempdir(), "mc_tmp_profiles")
+    shutil.rmtree(tmp, ignore_errors=True)
+    base = os.path.join(tmp, "User Data")
+    os.makedirs(base, exist_ok=True)
+    prof = os.path.join(base, "Default")
+    os.makedirs(prof, exist_ok=True)
 
+    import sqlite3
+    conn = sqlite3.connect(os.path.join(prof, "History"))
+    conn.executescript(
+        "CREATE TABLE urls (id INTEGER PRIMARY KEY, url TEXT);"
+        "CREATE TABLE visits (id INTEGER PRIMARY KEY, url INTEGER);"
+    )
+    conn.execute("INSERT INTO urls (url) VALUES ('https://adultsite.org/x')")
+    conn.commit()
+    conn.close()
 
-def test_gui_builds():
-    print("gui builds")
-    import tkinter as tk
-    from gui.app import MisClearApp
-    root = tk.Tk()
-    root.withdraw()
-    app = MisClearApp(root)
-    root.update_idletasks()
-    check("MisClearApp created", app is not None)
-    root.destroy()
+    # base_dir mimics detect_browsers: points at the "User Data" root
+    from cleaner.browser_paths import BrowserInfo
+    fake = BrowserInfo("chrome", "FakeChrome", base)
+    results = engine.scan_all([], ["adultsite.org"], [fake])
+    check("synthetic scan finds 1 match", results and results[0]["history"] == 1)
 
 
 def test_real_scan_no_crash():
@@ -87,12 +99,27 @@ def test_real_scan_no_crash():
             check(f"  field {k} present", k in r)
 
 
+def test_gui_builds():
+    print("gui builds + pump (no freeze)")
+    import tkinter as tk
+    import time
+    from gui.app import MisClearApp
+    root = tk.Tk()
+    root.withdraw()
+    app = MisClearApp(root)
+    deadline = time.time() + 1.5
+    while time.time() < deadline:
+        root.update()
+        time.sleep(0.02)
+    check("MisClearApp created + event loop pumps", app is not None)
+    root.destroy()
+
+
 if __name__ == "__main__":
     test_config()
     test_blocklist_parser()
-    tmp = os.path.join(tempfile.gettempdir(), "mc_tmp_profiles")
-    os.makedirs(tmp, exist_ok=True)
-    test_engine_scan(tmp)
+    test_engine_domains()
+    test_engine_synthetic_scan()
     test_real_scan_no_crash()
     test_gui_builds()
     print(f"\n===== RESULT: {PASS} passed, {FAIL} failed =====")

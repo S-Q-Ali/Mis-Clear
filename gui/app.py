@@ -1,3 +1,5 @@
+import queue
+import threading
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
@@ -13,6 +15,8 @@ class MisClearApp:
         root.minsize(700, 560)
 
         self.cfg = config.load_config()
+        self._busy = False
+        self._events = queue.Queue()
 
         nb = ttk.Notebook(root)
         nb.pack(fill="both", expand=True, padx=8, pady=8)
@@ -24,6 +28,9 @@ class MisClearApp:
 
         self._build_scan_tab()
         self._build_settings_tab()
+
+        # Thread-safe: worker threads push to queue; main thread polls.
+        self._poll_events()
 
     # ---------- Scan & Clean tab ----------
     def _build_scan_tab(self):
@@ -47,8 +54,10 @@ class MisClearApp:
 
         btns = ttk.Frame(self.scan_tab)
         btns.pack(fill="x", padx=8, pady=4)
-        ttk.Button(btns, text="Scan", command=self.do_scan).pack(side="left", padx=4)
-        ttk.Button(btns, text="Clean", command=self.do_clean).pack(side="left", padx=4)
+        self.scan_btn = ttk.Button(btns, text="Scan", command=self.do_scan)
+        self.scan_btn.pack(side="left", padx=4)
+        self.clean_btn = ttk.Button(btns, text="Clean", command=self.do_clean)
+        self.clean_btn.pack(side="left", padx=4)
         ttk.Button(btns, text="Refresh Browsers", command=self.refresh_browsers).pack(
             side="right", padx=4
         )
@@ -77,22 +86,27 @@ class MisClearApp:
         )
 
     def _selected_browsers(self):
-        return [b for b in self.detected if self.browser_vars.get(b.key, tk.BooleanVar()).get()]
+        out = []
+        for b in self.detected:
+            var = self.browser_vars.get(b.key)
+            if var is not None and var.get():
+                out.append(b)
+        return out
+
+    def _set_busy(self, busy):
+        self._busy = busy
+        state = "disabled" if busy else "normal"
+        self.scan_btn.config(state=state)
+        self.clean_btn.config(state=state)
 
     def refresh_browsers(self):
         self.detected = browser_paths.detect_browsers()
         self.status.set("Browsers refreshed.")
+        messagebox.showinfo("Refresh", "Restart the app to rebuild the browser list.")
 
-    def do_scan(self):
-        browsers = self._selected_browsers()
-        if not browsers:
-            messagebox.showwarning("No browsers", "Select at least one browser.")
-            return
+    def _populate(self, results):
         for item in self.tree.get_children():
             self.tree.delete(item)
-        self.status.set("Scanning...")
-        self.root.update_idletasks()
-        results = engine.scan_all(self._keywords(), self._blocklist(), browsers)
         for r in results:
             self.tree.insert(
                 "",
@@ -105,6 +119,37 @@ class MisClearApp:
                     f"{r['cache_bytes'] / 1024:.0f}",
                 ),
             )
+
+    def do_scan(self):
+        browsers = self._selected_browsers()
+        if not browsers:
+            messagebox.showwarning("No browsers", "Select at least one browser.")
+            return
+        self._set_busy(True)
+        self.status.set("Scanning... (window stays responsive)")
+        kwargs = {
+            "keywords": self._keywords(),
+            "blocklist": self._blocklist(),
+            "browsers": browsers,
+        }
+
+        def worker():
+            try:
+                results = engine.scan_all(**kwargs)
+                self._events.put(("scan_done", results, None))
+            except Exception as e:  # noqa: BLE001
+                self._events.put(("scan_done", [], e))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _scan_done(self, results, error):
+        if error:
+            self.status.set(f"Scan failed: {error}")
+            self._set_busy(False)
+            messagebox.showerror("Scan error", str(error))
+            return
+        self._populate(results)
+        self._set_busy(False)
         self.status.set(f"Scan complete: {len(results)} profile(s).")
 
     def do_clean(self):
@@ -131,23 +176,47 @@ class MisClearApp:
             "This will permanently delete matched history, cookies, autofill and cache. Continue?",
         ):
             return
-        self.status.set("Cleaning...")
-        self.root.update_idletasks()
-        summary, totals = engine.clean_all(self._keywords(), self._blocklist(), browsers)
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-        for r in summary:
-            self.tree.insert(
-                "",
-                "end",
-                values=(
-                    f"{r['browser']} — {r['profile']}",
-                    r["history"],
-                    r["cookies"],
-                    r["autofill"],
-                    f"{r['cache_bytes'] / 1024:.0f}",
-                ),
-            )
+
+        self._set_busy(True)
+        self.status.set("Cleaning... (window stays responsive)")
+        kwargs = {
+            "keywords": self._keywords(),
+            "blocklist": self._blocklist(),
+            "browsers": browsers,
+        }
+
+        def worker():
+            try:
+                summary, totals = engine.clean_all(**kwargs)
+                self._events.put(("clean_done", summary, totals))
+            except Exception as e:  # noqa: BLE001
+                self._events.put(("clean_done", [], None, e))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _poll_events(self):
+        try:
+            while True:
+                ev = self._events.get_nowait()
+                kind = ev[0]
+                if kind == "scan_done":
+                    self._scan_done(ev[1], ev[2])
+                elif kind == "clean_done":
+                    self._clean_done(ev[1], ev[2], ev[3] if len(ev) > 3 else None)
+                elif kind == "blocklist_done":
+                    self._blocklist_done(ev[1], ev[2])
+        except queue.Empty:
+            pass
+        self.root.after(100, self._poll_events)
+
+    def _clean_done(self, summary, totals, error):
+        if error:
+            self.status.set(f"Clean failed: {error}")
+            self._set_busy(False)
+            messagebox.showerror("Clean error", str(error))
+            return
+        self._populate(summary)
+        self._set_busy(False)
         self.status.set(
             f"Cleaned: {totals['history']} history, {totals['cookies']} cookies, "
             f"{totals['autofill']} autofill, {totals['cache_bytes'] / 1024:.0f} KB cache."
@@ -155,8 +224,7 @@ class MisClearApp:
 
     def _keywords(self):
         raw = self.keywords_entry.get()
-        kw = [k.strip().lower() for k in raw.replace(",", " ").split() if k.strip()]
-        return kw or list(self.cfg["keywords"])
+        return [k.strip().lower() for k in raw.replace(",", " ").split() if k.strip()] or list(self.cfg["keywords"])
 
     def _blocklist(self):
         return blocklist_manager.load_blocklist()
@@ -191,6 +259,11 @@ class MisClearApp:
         )
         ttk.Button(blk, text="Load from File", command=self.load_blocklist).pack(side="left", padx=4)
 
+        bl_state = ttk.LabelFrame(self.settings_tab, text="Blocklist status")
+        bl_state.pack(fill="x", **pad)
+        self.blk_status = tk.StringVar(value="Not checked.")
+        ttk.Label(bl_state, textvariable=self.blk_status).pack(side="left", padx=8)
+
     def save_defaults(self):
         kw = [k.strip().lower() for k in self.keywords_entry.get().replace(",", " ").split() if k.strip()]
         self.cfg["keywords"] = kw or list(self.cfg["keywords"])
@@ -203,12 +276,21 @@ class MisClearApp:
     def download_blocklist(self):
         self.blk_label.set("Downloading...")
         self.root.update_idletasks()
-        ok, count = blocklist_manager.download_blocklist()
+
+        def worker():
+            ok, info = blocklist_manager.download_blocklist()
+            self._events.put(("blocklist_done", ok, info))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _blocklist_done(self, ok, info):
         if ok:
-            self.blk_label.set(f"Blocklist loaded ({count} domains).")
-            self.status.set(f"Blocklist ready: {count} domains.")
+            self.blk_label.set(f"Blocklist loaded ({info} domains).")
+            self.blk_status.set(f"blocks: {len(blocklist_manager.load_blocklist())} domains loaded.")
+            self.status.set(f"Blocklist ready: {info} domains.")
         else:
-            self.blk_label.set("Download failed.")
+            msg = str(info)
+            self.blk_label.set(f"Download failed: {msg[:60]}")
             self.status.set("Blocklist download failed.")
 
     def load_blocklist(self):
@@ -219,6 +301,7 @@ class MisClearApp:
             return
         domains = blocklist_manager.load_blocklist(path)
         self.blk_label.set(f"Loaded {len(domains)} domains from file.")
+        self.blk_status.set(f"blocks: {len(domains)} domains loaded.")
         self.status.set(f"Blocklist loaded: {len(domains)} domains.")
 
 

@@ -9,36 +9,36 @@ from cleaner import (
 
 def _domains_for(keywords, blocklist):
     """Combine custom keywords + blocklist into one match set."""
-    domains = list(keywords)
-    for d in blocklist:
-        if d not in domains:
-            domains.append(d)
+    domains = set(blocklist)
+    for kw in keywords:
+        if kw:
+            domains.add(kw)
     return domains
 
 
 def scan_all(keywords, blocklist, browsers):
     """Return a list of result dicts per browser/profile."""
-    domains = _domains_for(keywords, blocklist)
+    domains_set = _domains_for(keywords, blocklist)
     results = []
     for browser in browsers:
         if browser.key == "firefox":
             profiles = browser_paths.firefox_profiles(browser)
             for prof in profiles:
-                results.append(_scan_profile(browser, prof, domains))
+                results.append(_scan_profile(browser, prof, domains_set, keywords))
         else:
             profiles = browser_paths.chrome_profiles(browser)
             if not profiles:
                 profiles = [browser.base_dir]
             for prof in profiles:
-                results.append(_scan_profile(browser, prof, domains))
+                results.append(_scan_profile(browser, prof, domains_set, keywords))
     return results
 
 
-def _scan_profile(browser, profile_dir, domains):
-    hist = history_cleaner.scan(profile_dir, domains)
-    cook = cookie_cleaner.scan(profile_dir, domains)
-    auto = autofill_cleaner.scan(profile_dir, domains)
-    cache_bytes = cache_cleaner.scan(profile_dir, domains)
+def _scan_profile(browser, profile_dir, domains_set, keywords):
+    hist = history_cleaner.scan(profile_dir, domains_set, keywords)
+    cook = cookie_cleaner.scan(profile_dir, domains_set, keywords)
+    auto = autofill_cleaner.scan(profile_dir, domains_set, keywords)
+    cache_bytes = cache_cleaner.scan(profile_dir, keywords)
     return {
         "browser": browser.name,
         "profile": profile_dir,
@@ -51,28 +51,28 @@ def _scan_profile(browser, profile_dir, domains):
 
 def clean_all(keywords, blocklist, browsers):
     """Run cleanup, returns (summary_items, total_counts)."""
-    domains = _domains_for(keywords, blocklist)
+    domains_set = _domains_for(keywords, blocklist)
     summary = []
     totals = {"history": 0, "cookies": 0, "autofill": 0, "cache_bytes": 0}
     for browser in browsers:
         if browser.key == "firefox":
             profiles = browser_paths.firefox_profiles(browser)
             for prof in profiles:
-                _clean_profile(browser, prof, domains, summary, totals)
+                _clean_profile(browser, prof, domains_set, keywords, summary, totals)
         else:
             profiles = browser_paths.chrome_profiles(browser)
             if not profiles:
                 profiles = [browser.base_dir]
             for prof in profiles:
-                _clean_profile(browser, prof, domains, summary, totals)
+                _clean_profile(browser, prof, domains_set, keywords, summary, totals)
     return summary, totals
 
 
-def _clean_profile(browser, profile_dir, domains, summary, totals):
-    h = history_cleaner.clean(profile_dir, domains)
-    c = cookie_cleaner.clean(profile_dir, domains)
-    a = autofill_cleaner.clean(profile_dir, domains)
-    cb = cache_cleaner.clean(profile_dir, domains)
+def _clean_profile(browser, profile_dir, domains_set, keywords, summary, totals):
+    h = history_cleaner.clean(profile_dir, domains_set, keywords)
+    c = cookie_cleaner.clean(profile_dir, domains_set, keywords)
+    a = autofill_cleaner.clean(profile_dir, domains_set, keywords)
+    cb = cache_cleaner.clean(profile_dir, keywords)
     totals["history"] += h
     totals["cookies"] += c
     totals["autofill"] += a

@@ -1,52 +1,60 @@
 from utils import sqlite_helper as db
-
+from cleaner.matching import matches
 
 HISTORY_DB = "History"
 
-
-def _like(domains):
-    where = " OR ".join(["url LIKE ?"] * len(domains))
-    params = tuple(f"%{d}%" for d in domains)
-    return where, params
+_CHUNK = 500
 
 
-def _url_ids(db_path, domains):
-    where, params = _like(domains)
-    rows = db.read_rows(db_path, f"SELECT id FROM urls WHERE {where}", params)
-    return [r["id"] for r in rows]
-
-
-def scan(profile_dir, domains):
-    """Read-only scan. Returns matched URL count."""
+def _prep(profile_dir, domains_set, keywords):
     db_path = db.find_db_file(profile_dir, HISTORY_DB)
-    if not db_path or not domains:
+    if not db_path:
+        return None, None, None
+    return db_path, domains_set, keywords
+
+
+def _matching_ids(db_path, domains_set, keywords):
+    rows = db.read_rows(db_path, "SELECT id, url FROM urls")
+    ids = []
+    for r in rows:
+        if matches(r["url"], domains_set, keywords):
+            ids.append(r["id"])
+    return ids
+
+
+def _chunks(ids):
+    for i in range(0, len(ids), _CHUNK):
+        yield ids[i:i + _CHUNK]
+
+
+def scan(profile_dir, domains_set, keywords):
+    db_path, dset, kws = _prep(profile_dir, domains_set, keywords)
+    if not db_path or (not dset and not kws):
         return 0
-    return len(_url_ids(db_path, domains))
+    return len(_matching_ids(db_path, dset, kws))
 
 
-def clean(profile_dir, domains):
-    """Delete matching URLs and their visits. Browsers must be closed.
-
-    Works directly on the live DB. Returns total rows affected.
-    """
-    db_path = db.find_db_file(profile_dir, HISTORY_DB)
-    if not db_path or not domains:
+def clean(profile_dir, domains_set, keywords):
+    """Delete matching URLs and their visits. Browsers must be closed."""
+    db_path, dset, kws = _prep(profile_dir, domains_set, keywords)
+    if not db_path or (not dset and not kws):
         return 0
-    ids = _url_ids(db_path, domains)
+    ids = _matching_ids(db_path, dset, kws)
     if not ids:
         return 0
-    marks = ",".join("?" * len(ids))
-    stmts = [
-        (f"DELETE FROM visits WHERE url IN ({marks})", tuple(ids)),
-        (f"DELETE FROM urls WHERE id IN ({marks})", tuple(ids)),
-    ]
-    rows, err = db.execute_write(db_path, stmts)
-    if not err:
-        db.vacuum_db(db_path)
-    elif "no such table: visits" in (err or ""):
-        # fallback for DBs without a visits table
-        only_urls = [(f"DELETE FROM urls WHERE id IN ({marks})", tuple(ids))]
-        rows, err = db.execute_write(db_path, only_urls)
-        if not err:
-            db.vacuum_db(db_path)
-    return rows
+    total = 0
+    for chunk in _chunks(ids):
+        marks = ",".join("?" * len(chunk))
+        ids_t = tuple(chunk)
+        stmts = [
+            (f"DELETE FROM visits WHERE url IN ({marks})", ids_t),
+        ]
+        rows, err = db.execute_write(db_path, stmts)
+        total += rows
+        if err and "no such table: visits" not in (err or ""):
+            # don't abort on missing visits table; try urls anyway
+            pass
+        rows, err = db.execute_write(db_path, [(f"DELETE FROM urls WHERE id IN ({marks})", ids_t)])
+        total += rows
+    db.vacuum_db(db_path)
+    return total

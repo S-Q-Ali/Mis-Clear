@@ -18,6 +18,7 @@ from cleaner import (  # noqa: E402
     history_cleaner,
     autofill_cleaner,
 )
+from cleaner.matching import matches  # noqa: E402
 
 PASS = 0
 FAIL = 0
@@ -44,10 +45,12 @@ def make_history(profile):
         """
     )
     conn.execute("INSERT INTO urls (url,title,visit_count) VALUES ('https://pornhub.com/a','P',1)")
+    conn.execute("INSERT INTO urls (url,title,visit_count) VALUES ('https://www.pornhub.com/v','P2',1)")
     conn.execute("INSERT INTO urls (url,title,visit_count) VALUES ('https://google.com','G',2)")
     conn.execute("INSERT INTO urls (url,title,visit_count) VALUES ('https://xvideos.com/v','X',1)")
     conn.execute("INSERT INTO visits (url) VALUES (1)")
-    conn.execute("INSERT INTO visits (url) VALUES (3)")
+    conn.execute("INSERT INTO visits (url) VALUES (2)")
+    conn.execute("INSERT INTO visits (url) VALUES (4)")
     conn.commit()
     conn.close()
     return dbp
@@ -94,16 +97,25 @@ def db_count(path, table):
     return n
 
 
+def test_matching():
+    print("matching")
+    check("keyword substring matches", matches("https://pornhub.com/a", set(), ["pornhub"]))
+    check("exact domain matches", matches("https://pornhub.com/a", {"pornhub.com"}, []))
+    check("subdomain matches domain", matches("https://m.pornhub.com/a", {"pornhub.com"}, []))
+    check("www prefix matches", matches("https://www.pornhub.com/a", {"pornhub.com"}, []))
+    check("no false positive", not matches("https://example.com/a", {"pornhub.com"}, ["xvideo"]))
+
+
 def test_history():
     print("history_cleaner")
     profile = os.path.join(tempfile.gettempdir(), "mc_test_hist")
     shutil.rmtree(profile, ignore_errors=True)
     os.makedirs(profile, exist_ok=True)
     dbp = make_history(profile)
-    check("scan finds 2 matches (pornhub,xvideos)", history_cleaner.scan(profile, ["pornhub", "xvideos"]) == 2)
-    check("scan 0 for no-match", history_cleaner.scan(profile, ["nonexistent"]) == 0)
-    rows = history_cleaner.clean(profile, ["pornhub", "xvideos"])
-    check("clean removes 4 rows (2 urls + 2 visits)", rows == 4)
+    check("scan finds 3 matches (pornhub x2, xvideos)", history_cleaner.scan(profile, {"pornhub.com", "xvideos.com"}, []) == 3)
+    check("scan 0 for no-match", history_cleaner.scan(profile, {"nonexistent.com"}, []) == 0)
+    rows = history_cleaner.clean(profile, {"pornhub.com", "xvideos.com"}, [])
+    check("clean removes 6 rows (3 urls + 3 visits)", rows == 6)
     check("only google url remains", db_count(dbp, "urls") == 1)
     check("no visits remain", db_count(dbp, "visits") == 0)
     shutil.rmtree(profile, ignore_errors=True)
@@ -115,8 +127,8 @@ def test_cookies():
     shutil.rmtree(profile, ignore_errors=True)
     os.makedirs(profile, exist_ok=True)
     dbp = make_cookies(profile)
-    check("scan finds 1 xvideos cookie", cookie_cleaner.scan(profile, ["xvideos"]) == 1)
-    rows = cookie_cleaner.clean(profile, ["xvideos"])
+    check("scan finds 1 xvideos cookie", cookie_cleaner.scan(profile, {"xvideos.com"}, []) == 1)
+    rows = cookie_cleaner.clean(profile, {"xvideos.com"}, [])
     check("clean removes 1 cookie", rows == 1)
     check("gmail cookie remains", db_count(dbp, "cookies") == 1)
     shutil.rmtree(profile, ignore_errors=True)
@@ -128,8 +140,8 @@ def test_autofill():
     shutil.rmtree(profile, ignore_errors=True)
     os.makedirs(profile, exist_ok=True)
     dbp = make_autofill(profile)
-    check("scan finds 1 pornhub autofill", autofill_cleaner.scan(profile, ["pornhub"]) == 1)
-    rows = autofill_cleaner.clean(profile, ["pornhub"])
+    check("scan finds 1 pornhub autofill", autofill_cleaner.scan(profile, {"pornhub.com"}, []) == 1)
+    rows = autofill_cleaner.clean(profile, {"pornhub.com"}, [])
     check("clean removes 1 autofill", rows == 1)
     check("google autofill remains", db_count(dbp, "autofill") == 1)
     shutil.rmtree(profile, ignore_errors=True)
@@ -155,12 +167,12 @@ def test_browser_detection():
     print("browser_paths")
     browsers = browser_paths.detect_browsers()
     check("detect_browsers returns a list", isinstance(browsers, list))
-    # Safe-path: each BrowserInfo has key/name
     for b in browsers:
         check(f"BrowserInfo {b.name} has key", bool(b.key))
 
 
 if __name__ == "__main__":
+    test_matching()
     test_browser_detection()
     test_history()
     test_cookies()
