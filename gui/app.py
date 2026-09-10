@@ -1,3 +1,4 @@
+import os
 import queue
 import threading
 import tkinter as tk
@@ -58,6 +59,10 @@ class MisClearApp:
         self.scan_btn.pack(side="left", padx=4)
         self.clean_btn = ttk.Button(btns, text="Clean", command=self.do_clean)
         self.clean_btn.pack(side="left", padx=4)
+        self.details_btn = ttk.Button(
+            btns, text="Details...", command=self.do_details, state="disabled"
+        )
+        self.details_btn.pack(side="left", padx=4)
         ttk.Button(btns, text="Refresh Browsers", command=self.refresh_browsers).pack(
             side="right", padx=4
         )
@@ -79,6 +84,8 @@ class MisClearApp:
         self.tree.column("autofill", width=70, anchor="center")
         self.tree.column("cache", width=90, anchor="center")
         self.tree.pack(fill="both", expand=True, padx=8, pady=4)
+        self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
+        self._row_meta = {}
 
         self.status = tk.StringVar(value="Ready.")
         ttk.Label(self.scan_tab, textvariable=self.status).pack(
@@ -98,6 +105,10 @@ class MisClearApp:
         state = "disabled" if busy else "normal"
         self.scan_btn.config(state=state)
         self.clean_btn.config(state=state)
+        self.details_btn.config(state=state if not self.tree.selection() else ("normal" if not busy else "disabled"))
+
+    def _on_tree_select(self, _event):
+        self.details_btn.config(state="normal" if self.tree.selection() else "disabled")
 
     def refresh_browsers(self):
         self.detected = browser_paths.detect_browsers()
@@ -107,8 +118,9 @@ class MisClearApp:
     def _populate(self, results):
         for item in self.tree.get_children():
             self.tree.delete(item)
+        self._row_meta = {}
         for r in results:
-            self.tree.insert(
+            iid = self.tree.insert(
                 "",
                 "end",
                 values=(
@@ -119,6 +131,7 @@ class MisClearApp:
                     f"{r['cache_bytes'] / 1024:.0f}",
                 ),
             )
+            self._row_meta[iid] = {"profile": r["profile"], "browser": r["browser"]}
 
     def do_scan(self):
         browsers = self._selected_browsers()
@@ -151,6 +164,83 @@ class MisClearApp:
         self._populate(results)
         self._set_busy(False)
         self.status.set(f"Scan complete: {len(results)} profile(s).")
+
+    def do_details(self):
+        sel = self.tree.selection()
+        if not sel:
+            messagebox.showinfo("Details", "Select a profile row first.")
+            return
+        meta = self._row_meta.get(sel[0])
+        if not meta:
+            return
+        browser = next((b for b in self.detected if b.name == meta["browser"]), None)
+        if browser is None:
+            messagebox.showerror("Details", "Browser profile not found.")
+            return
+        self._set_busy(True)
+        self.status.set("Fetching matched items...")
+        kwargs = {
+            "keywords": self._keywords(),
+            "blocklist": self._blocklist(),
+            "browser": browser,
+            "profile_dir": meta["profile"],
+        }
+
+        def worker():
+            try:
+                detail = engine.details_profile(
+                    kwargs["browser"],
+                    kwargs["profile_dir"],
+                    kwargs["keywords"],
+                    kwargs["blocklist"],
+                )
+                self._events.put(("details_done", detail))
+            except Exception as e:  # noqa: BLE001
+                self._events.put(("details_done", None, e))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _details_done(self, detail, error):
+        self._set_busy(False)
+        if error is not None:
+            self.status.set(f"Details failed: {error}")
+            messagebox.showerror("Details error", str(error))
+            return
+        win = tk.Toplevel(self.root)
+        name = os.path.basename(detail["profile"]) or detail["profile"]
+        win.title(f"Details — {detail['browser']} › {name}")
+        win.geometry("760x500")
+
+        tree = ttk.Treeview(win, columns=("item", "matched_by"), show="headings")
+        tree.heading("item", text="Matched item")
+        tree.heading("matched_by", text="Matched by")
+        tree.column("item", width=520)
+        tree.column("matched_by", width=200)
+        tree.pack(fill="both", expand=True, padx=8, pady=8)
+
+        def add_group(title, items, item_key):
+            if not items:
+                return
+            parent = tree.insert("", "end", text=title, open=True, values=("", ""))
+            for row in items:
+                label = row[item_key]
+                if row.get("name"):
+                    label = f"{label}  (name={row['name']})"
+                tree.insert(parent, "end", values=(label, row["matched_by"]))
+
+        add_group(f"History ({len(detail['history'])})", detail["history"], "url")
+        add_group(f"Cookies ({len(detail['cookies'])})", detail["cookies"], "host")
+        add_group(f"Autofill ({len(detail['autofill'])})", detail["autofill"], "url")
+
+        cache_kb = detail["cache_bytes"] / 1024
+        ttk.Label(
+            win,
+            text=f"Cache: {cache_kb:.0f} KB (whole folder — per-item not available)",
+        ).pack(side="bottom", fill="x", padx=8, pady=4)
+        self.status.set(
+            f"Details: {len(detail['history'])} history, {len(detail['cookies'])} cookies, "
+            f"{len(detail['autofill'])} autofill, {cache_kb:.0f} KB cache."
+        )
 
     def do_clean(self):
         browsers = self._selected_browsers()
@@ -201,6 +291,9 @@ class MisClearApp:
                 kind = ev[0]
                 if kind == "scan_done":
                     self._scan_done(ev[1], ev[2])
+                elif kind == "details_done":
+                    err = ev[2] if len(ev) > 2 else None
+                    self._details_done(ev[1], err)
                 elif kind == "clean_done":
                     self._clean_done(ev[1], ev[2], ev[3] if len(ev) > 3 else None)
                 elif kind == "blocklist_done":

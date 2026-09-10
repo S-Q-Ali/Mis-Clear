@@ -18,7 +18,7 @@ from cleaner import (  # noqa: E402
     history_cleaner,
     autofill_cleaner,
 )
-from cleaner.matching import matches  # noqa: E402
+from cleaner.matching import matches, matched_by  # noqa: E402
 
 PASS = 0
 FAIL = 0
@@ -104,6 +104,11 @@ def test_matching():
     check("subdomain matches domain", matches("https://m.pornhub.com/a", {"pornhub.com"}, []))
     check("www prefix matches", matches("https://www.pornhub.com/a", {"pornhub.com"}, []))
     check("no false positive", not matches("https://example.com/a", {"pornhub.com"}, ["xvideo"]))
+    check("matched_by returns keyword", matched_by("https://pornhub.com/a", set(), ["pornhub"]) == "pornhub")
+    check("matched_by returns domain", matched_by("https://pornhub.com/a", {"pornhub.com"}, []) == "pornhub.com")
+    check("matched_by subdomain", matched_by("https://m.pornhub.com/a", {"pornhub.com"}, []) == "pornhub.com")
+    check("matched_by case-insensitive", matched_by("HTTPS://PornHub.COM/a", {"pornhub.com"}, []) == "pornhub.com")
+    check("matched_by None when no match", matched_by("https://example.com", {"pornhub.com"}, ["xvideo"]) is None)
 
 
 def test_history():
@@ -113,6 +118,10 @@ def test_history():
     os.makedirs(profile, exist_ok=True)
     dbp = make_history(profile)
     check("scan finds 3 matches (pornhub x2, xvideos)", history_cleaner.scan(profile, {"pornhub.com", "xvideos.com"}, []) == 3)
+    det = history_cleaner.details(profile, {"pornhub.com", "xvideos.com"}, [])
+    check("details returns 3 items", len(det) == 3)
+    check("details has matched_by per item", all("matched_by" in d and d["matched_by"] for d in det))
+    check("details matching domain recorded", any(d["url"].startswith("https://pornhub.com") and d["matched_by"] == "pornhub.com" for d in det))
     check("scan 0 for no-match", history_cleaner.scan(profile, {"nonexistent.com"}, []) == 0)
     rows = history_cleaner.clean(profile, {"pornhub.com", "xvideos.com"}, [])
     check("clean removes 6 rows (3 urls + 3 visits)", rows == 6)
@@ -128,6 +137,9 @@ def test_cookies():
     os.makedirs(profile, exist_ok=True)
     dbp = make_cookies(profile)
     check("scan finds 1 xvideos cookie", cookie_cleaner.scan(profile, {"xvideos.com"}, []) == 1)
+    det = cookie_cleaner.details(profile, {"xvideos.com"}, [])
+    check("details returns 1 cookie", len(det) == 1 and det[0]["host"] == "xvideos.com")
+    check("cookie details include name+matched_by", det[0]["name"] == "sid" and det[0]["matched_by"] == "xvideos.com")
     rows = cookie_cleaner.clean(profile, {"xvideos.com"}, [])
     check("clean removes 1 cookie", rows == 1)
     check("gmail cookie remains", db_count(dbp, "cookies") == 1)
@@ -141,6 +153,9 @@ def test_autofill():
     os.makedirs(profile, exist_ok=True)
     dbp = make_autofill(profile)
     check("scan finds 1 pornhub autofill", autofill_cleaner.scan(profile, {"pornhub.com"}, []) == 1)
+    det = autofill_cleaner.details(profile, {"pornhub.com"}, [])
+    check("details returns 1 autofill", len(det) == 1 and det[0]["url"].startswith("https://pornhub.com"))
+    check("autofill details include name+matched_by", det[0]["name"] == "q1" and det[0]["matched_by"] == "pornhub.com")
     rows = autofill_cleaner.clean(profile, {"pornhub.com"}, [])
     check("clean removes 1 autofill", rows == 1)
     check("google autofill remains", db_count(dbp, "autofill") == 1)

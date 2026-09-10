@@ -1,5 +1,5 @@
 from utils import sqlite_helper as db
-from cleaner.matching import matches
+from cleaner.matching import matched_by
 
 HISTORY_DB = "History"
 
@@ -13,13 +13,14 @@ def _prep(profile_dir, domains_set, keywords):
     return db_path, domains_set, keywords
 
 
-def _matching_ids(db_path, domains_set, keywords):
+def _load_matches(db_path, domains_set, keywords):
     rows = db.read_rows(db_path, "SELECT id, url FROM urls")
-    ids = []
+    out = []
     for r in rows:
-        if matches(r["url"], domains_set, keywords):
-            ids.append(r["id"])
-    return ids
+        m = matched_by(r["url"], domains_set, keywords)
+        if m:
+            out.append({"id": r["id"], "url": r["url"], "matched_by": m})
+    return out
 
 
 def _chunks(ids):
@@ -31,7 +32,18 @@ def scan(profile_dir, domains_set, keywords):
     db_path, dset, kws = _prep(profile_dir, domains_set, keywords)
     if not db_path or (not dset and not kws):
         return 0
-    return len(_matching_ids(db_path, dset, kws))
+    return len(_load_matches(db_path, dset, kws))
+
+
+def details(profile_dir, domains_set, keywords):
+    """Return matched history entries as [{url, matched_by}, ...]."""
+    db_path, dset, kws = _prep(profile_dir, domains_set, keywords)
+    if not db_path or (not dset and not kws):
+        return []
+    return [
+        {"url": m["url"], "matched_by": m["matched_by"]}
+        for m in _load_matches(db_path, dset, kws)
+    ]
 
 
 def clean(profile_dir, domains_set, keywords):
@@ -39,7 +51,7 @@ def clean(profile_dir, domains_set, keywords):
     db_path, dset, kws = _prep(profile_dir, domains_set, keywords)
     if not db_path or (not dset and not kws):
         return 0
-    ids = _matching_ids(db_path, dset, kws)
+    ids = [m["id"] for m in _load_matches(db_path, dset, kws)]
     if not ids:
         return 0
     total = 0

@@ -49,6 +49,19 @@ def _scan_profile(browser, profile_dir, domains_set, keywords):
     }
 
 
+def details_profile(browser, profile_dir, keywords, blocklist):
+    """Return the actual matched items for a single profile."""
+    domains_set = _domains_for(keywords, blocklist)
+    return {
+        "browser": browser.name,
+        "profile": profile_dir,
+        "history": history_cleaner.details(profile_dir, domains_set, keywords),
+        "cookies": cookie_cleaner.details(profile_dir, domains_set, keywords),
+        "autofill": autofill_cleaner.details(profile_dir, domains_set, keywords),
+        "cache_bytes": cache_cleaner.scan(profile_dir, keywords),
+    }
+
+
 def clean_all(keywords, blocklist, browsers):
     """Run cleanup, returns (summary_items, total_counts)."""
     domains_set = _domains_for(keywords, blocklist)

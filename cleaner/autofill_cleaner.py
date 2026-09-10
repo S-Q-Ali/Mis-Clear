@@ -1,5 +1,5 @@
 from utils import sqlite_helper as db
-from cleaner.matching import matches
+from cleaner.matching import matched_by
 
 WEB_DATA_DB = "Web Data"
 
@@ -13,12 +13,20 @@ def _prep(profile_dir, domains_set, keywords):
     return db_path, domains_set, keywords
 
 
-def _matching_rows(db_path, domains_set, keywords):
-    rows = db.read_rows(db_path, "SELECT rowid, url FROM autofill")
+def _load_matches(db_path, domains_set, keywords):
+    rows = db.read_rows(db_path, "SELECT rowid, url, name FROM autofill")
     out = []
     for r in rows:
-        if matches(r["url"], domains_set, keywords):
-            out.append(r["rowid"])
+        m = matched_by(r["url"], domains_set, keywords)
+        if m:
+            out.append(
+                {
+                    "rowid": r["rowid"],
+                    "url": r["url"],
+                    "name": r["name"],
+                    "matched_by": m,
+                }
+            )
     return out
 
 
@@ -31,7 +39,22 @@ def scan(profile_dir, domains_set, keywords):
     db_path, dset, kws = _prep(profile_dir, domains_set, keywords)
     if not db_path or (not dset and not kws):
         return 0
-    return len(_matching_rows(db_path, dset, kws))
+    return len(_load_matches(db_path, dset, kws))
+
+
+def details(profile_dir, domains_set, keywords):
+    """Return matched autofill entries as [{url, name, matched_by}, ...]."""
+    db_path, dset, kws = _prep(profile_dir, domains_set, keywords)
+    if not db_path or (not dset and not kws):
+        return []
+    return [
+        {
+            "url": m["url"],
+            "name": m["name"],
+            "matched_by": m["matched_by"],
+        }
+        for m in _load_matches(db_path, dset, kws)
+    ]
 
 
 def clean(profile_dir, domains_set, keywords):
@@ -39,7 +62,7 @@ def clean(profile_dir, domains_set, keywords):
     db_path, dset, kws = _prep(profile_dir, domains_set, keywords)
     if not db_path or (not dset and not kws):
         return 0
-    rows = _matching_rows(db_path, dset, kws)
+    rows = [m["rowid"] for m in _load_matches(db_path, dset, kws)]
     if not rows:
         return 0
     total = 0

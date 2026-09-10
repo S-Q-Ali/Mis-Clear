@@ -88,6 +88,35 @@ def test_engine_synthetic_scan():
     check("synthetic scan finds 1 match", results and results[0]["history"] == 1)
 
 
+def test_engine_details():
+    print("engine.details_profile (synthetic profile)")
+    from cleaner import engine
+
+    tmp = os.path.join(tempfile.gettempdir(), "mc_tmp_details")
+    shutil.rmtree(tmp, ignore_errors=True)
+    prof = tmp
+    os.makedirs(prof, exist_ok=True)
+
+    import sqlite3
+    conn = sqlite3.connect(os.path.join(prof, "History"))
+    conn.executescript(
+        "CREATE TABLE urls (id INTEGER PRIMARY KEY, url TEXT);"
+        "CREATE TABLE visits (id INTEGER PRIMARY KEY, url INTEGER);"
+    )
+    conn.execute("INSERT INTO urls (url) VALUES ('https://adultsite.org/x')")
+    conn.execute("INSERT INTO urls (url) VALUES ('https://okay.example.com')")
+    conn.commit()
+    conn.close()
+
+    from cleaner.browser_paths import BrowserInfo
+    fake = BrowserInfo("chrome", "FakeChrome", tmp)
+    detail = engine.details_profile(fake, prof, [], ["adultsite.org"])
+    check("details_profile returns history list", isinstance(detail["history"], list))
+    check("details_profile matched_by set", detail["history"] and detail["history"][0]["matched_by"] == "adultsite.org")
+    check("details_profile excludes other rows", len(detail["history"]) == 1)
+    shutil.rmtree(tmp, ignore_errors=True)
+
+
 def test_real_scan_no_crash():
     print("engine.scan_all on real browsers (no delete)")
     from cleaner import browser_paths, engine
@@ -120,6 +149,7 @@ if __name__ == "__main__":
     test_blocklist_parser()
     test_engine_domains()
     test_engine_synthetic_scan()
+    test_engine_details()
     test_real_scan_no_crash()
     test_gui_builds()
     print(f"\n===== RESULT: {PASS} passed, {FAIL} failed =====")
