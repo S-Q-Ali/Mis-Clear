@@ -1,56 +1,67 @@
-# Mis-Clear
+# Privacy Guardian
 
-**Windows Online Activity Trace Cleaner**
+**Local-first personal privacy / OSINT assistant.**
 
-Mis-Clear helps you wipe traces of specific websites (e.g. accidentally visited adult sites) from your browsers — history, cookies, cache, and autofill — so they don't show up in address-bar suggestions or your browsing history.
+Investigates where your email, usernames, and photos surface publicly, confirms
+evidence, correlates identities, scores your exposure risk, and prepares
+**human-approved** privacy actions — all private by default, on your laptop.
 
-## Features
+> Formerly **Mis-Clear** (browser trace cleaner). This repo pivoted to the
+> Privacy Guardian master plan (`MASTER_BUILD_INSTRUCTIONS.md`).
 
-- **Multi-browser** — works with Google Chrome, Microsoft Edge, Brave, Opera, and Firefox
-- **4 cleanup types** per browser:
-  - History entries (SQLite)
-  - Cookies (SQLite)
-  - Autofill / address-bar suggestions (SQLite)
-  - Cache files (disk)
-- **Blocklist** — download the StevenBlack adult-content blocklist (76K+ domains)
-- **Custom keywords** — add your own domains/terms
-- **Scan mode** — preview matches before deleting anything
-- **Safe** — requires browsers to be closed, confirmation before clean, DB `VACUUM` after delete
+## Principles
+
+- **Private > convenient** — everything stays local by default.
+- **Evidence > assumptions** — every finding records source, URL, timestamp, confidence.
+- **Local > cloud** — an optional, user-approved Colab worker handles heavy GPU work only.
+- **Deterministic > opaque** — risk scoring uses deterministic rules.
+- **Verified > claimed** — nothing is reported that wasn't actually checked.
+
+## Status
+
+Phase 0–1 complete (environment audit + bootstrap). See `docs/PROJECT_DOCUMENTATION.md`
+for the phase table. Backend `/health` works; tests green.
 
 ## Requirements
 
-- Python 3.x (uses only the standard library — tkinter, sqlite3, urllib, shutil, os)
-- No external dependencies
+- Python 3.11+ (managed via [uv](https://docs.astral.sh/uv/))
+- Node.js 20+ / npm (frontend)
+- Optional: [Ollama](https://ollama.com) for local AI (Phase 3)
 
-## Usage
-
-```
-python main.py
-```
-
-1. **Scan & Clean** tab: pick browsers, click **Scan** to preview matches, then **Clean** (after closing the browsers).
-2. **Settings** tab: add custom keywords, download the blocklist, save defaults.
-
-## Project layout
+## Quickstart
 
 ```
-├── main.py                 # Entry point
-├── requirements.txt        # (no external deps)
-├── cleaner/
-│   ├── engine.py           # Orchestrates cleanup across browsers
-│   ├── browser_paths.py    # Detects installed browsers/profiles
-│   ├── history_cleaner.py  # History SQLite cleanup
-│   ├── cookie_cleaner.py   # Cookies SQLite cleanup
-│   ├── cache_cleaner.py    # Cache file cleanup
-│   ├── autofill_cleaner.py # Autofill SQLite cleanup
-│   ├── blocklist_manager.py# StevenBlack blocklist download/load
-│   └── processes.py        # Browser process / lock checks
-├── gui/app.py              # tkinter GUI
-└── utils/
-    ├── config.py           # config.json load/save
-    └── sqlite_helper.py    # safe SQLite helpers
+uv sync
+uv run pytest                 # backend tests
+uv run uvicorn app.backend.main:app --port 8000   # backend
+cd app/frontend && npm install && npm run dev     # frontend (5173)
 ```
+
+Or use the scripts: `scripts/setup.ps1`, `scripts/start.ps1`, `scripts/stop.ps1`.
+
+## Layout
+
+```
+app/backend/    FastAPI control plane (api, services, agents, workers, db, security)
+app/frontend/   React + TypeScript UI
+app/shared/     shared contracts (backend ↔ colab)
+colab/          optional GPU worker (protocol, worker, notebook)
+tools/          OSINT / photo / system adapters (Phase 6–7)
+data/           local database, evidence, reports, uploads, cache, logs (gitignored)
+tests/          unit / integration / security / e2e / fixtures
+docs/           environment, architecture, security, threat model, tool matrix, …
+scripts/        setup / start / stop / health-check
+```
+
+## Docs
+
+- `MASTER_BUILD_INSTRUCTIONS.md` — controlling master plan
+- `docs/PROJECT_DOCUMENTATION.md` — current product state (updated every phase)
+- `docs/ENVIRONMENT_REPORT.md` — Phase 0 audit
+- `docs/SECURITY_MODEL.md`, `docs/THREAT_MODEL.md` — security posture
 
 ## Privacy
 
-Everything runs locally on your machine. The only network request is the optional, user-triggered blocklist download.
+Local by default. The only optional external components are the user-triggered
+blocklist/OSINT lookups and the **explicitly approved** Colab worker. We never
+store or request passwords and never auto-delete anything.

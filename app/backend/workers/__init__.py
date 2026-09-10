@@ -1,0 +1,1 @@
+"""Workers (scan runner, colab dispatcher) — populated in Phase 5/8."""

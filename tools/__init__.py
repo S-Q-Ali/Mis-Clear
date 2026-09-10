@@ -1,0 +1,1 @@
+"""Tool adapter packages: email, username, web, photo, system (Phase 6/7)."""

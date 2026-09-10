@@ -1,0 +1,1 @@
+"""Tool adapter layer (OSINT/photo/system adapters) — populated in Phase 6/7."""

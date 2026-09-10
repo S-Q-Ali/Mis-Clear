@@ -1,0 +1,59 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agents": {
+    "privacy-guardian": {
+      "description": "Master orchestrator for Privacy Guardian: understands objectives, plans investigations, dispatches specialist agents, collects evidence, enforces privacy rules, and produces reports.",
+      "tools": {
+        "read": true,
+        "grep": true,
+        "glob": true,
+        "bash": true,
+        "edit": true,
+        "write": true,
+        "webfetch": true,
+        "websearch": true,
+        "task": true
+      }
+    },
+    "architect": {
+      "description": "Architecture, module boundaries, dependency decisions, ADRs, Graphify tracing.",
+      "tools": { "read": true, "grep": true, "glob": true, "bash": true }
+    },
+    "backend-engineer": {
+      "description": "FastAPI, database, APIs, services, workers, error handling.",
+      "tools": { "read": true, "grep": true, "glob": true, "bash": true, "edit": true, "write": true }
+    },
+    "frontend-engineer": {
+      "description": "React, TypeScript, UI, accessibility, responsive behavior, frontend testing.",
+      "tools": { "read": true, "grep": true, "glob": true, "bash": true, "edit": true, "write": true }
+    },
+    "ai-engineer": {
+      "description": "Ollama, model routing, prompts, structured outputs, local inference, Colab GPU execution.",
+      "tools": { "read": true, "grep": true, "glob": true, "bash": true, "edit": true, "write": true }
+    },
+    "osint-engineer": {
+      "description": "Public OSINT tools, evidence extraction, normalization, false-positive filtering.",
+      "tools": { "read": true, "grep": true, "glob": true, "bash": true, "edit": true, "write": true, "webfetch": true }
+    },
+    "image-forensics": {
+      "description": "EXIF, OCR, hashes, pHash, local vision, image analysis.",
+      "tools": { "read": true, "grep": true, "glob": true, "bash": true, "edit": true, "write": true }
+    },
+    "colab-engineer": {
+      "description": "Colab notebook, worker lifecycle, job protocol, GPU detection, model loading, failure/reconnect.",
+      "tools": { "read": true, "grep": true, "glob": true, "bash": true, "edit": true, "write": true }
+    },
+    "security-auditor": {
+      "description": "Threat model, prompt injection defense, data leakage, SSRF, command injection, path traversal, secrets.",
+      "tools": { "read": true, "grep": true, "glob": true, "bash": true, "edit": true, "write": true }
+    },
+    "test-engineer": {
+      "description": "Unit, integration, E2E, security, regression tests.",
+      "tools": { "read": true, "grep": true, "glob": true, "bash": true, "edit": true, "write": true }
+    },
+    "documentation-agent": {
+      "description": "Project docs, changelog, session state, architecture synchronization, setup instructions.",
+      "tools": { "read": true, "grep": true, "glob": true, "bash": true, "edit": true, "write": true }
+    }
+  }
+}

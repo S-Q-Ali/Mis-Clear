@@ -1,0 +1,1 @@
+"""Username/account discovery adapters (Phase 6)."""

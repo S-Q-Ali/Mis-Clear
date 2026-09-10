@@ -1,0 +1,1 @@
+"""Security utilities (hardening) — populated in Phase 13."""

@@ -1,0 +1,1 @@
+"""Email exposure investigation adapters (Phase 6)."""

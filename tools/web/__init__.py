@@ -1,0 +1,1 @@
+"""Public web OSINT adapters (Phase 6)."""

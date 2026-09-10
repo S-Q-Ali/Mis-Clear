@@ -5,6 +5,17 @@ __pycache__/
 .venv/
 venv/
 env/
+*.db
+*.sqlite3
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / frontend
+node_modules/
+dist/
+build/
+*.tsbuildinfo
 
 # Local dependencies (keep in repo, not tracked)
 lib/
@@ -14,6 +25,23 @@ site-packages/
 # Project runtime data
 blocklist.txt
 config.json
+data/database/*.db
+data/database/*.sqlite3
+data/evidence/*
+data/reports/*
+data/uploads/*
+data/cache/*
+data/logs/*
+!data/**/.gitkeep
+
+# Graphify artifacts (regenerable)
+graphify-out/
+.graphify/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
 
 # Local-only tracking (do not push)
 SESSION_STATE.md
@@ -24,3 +52,7 @@ SESSION_STATE.md
 # OS
 Thumbs.db
 .DS_Store
+
+# IDE
+.idea/
+.vscode/

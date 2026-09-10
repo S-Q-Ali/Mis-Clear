@@ -1,0 +1,1 @@
+"""System-level tooling (local checks, safe actions)."""
