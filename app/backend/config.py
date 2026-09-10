@@ -18,7 +18,10 @@ class Settings(BaseSettings):
     ollama_timeout_seconds: int = 120
     ollama_retries: int = 2
 
+    # Colab worker (optional; treated as temporary compute runtime)
     colab_job_dispatcher_url: str = ""
+    # Ollama served on a Colab/site tunnel (optional AI worker), e.g. https://xxx.loca.lt
+    colab_ollama_url: str = ""
     colab_approval_required: bool = True
 
     default_scan_mode: str = "local"

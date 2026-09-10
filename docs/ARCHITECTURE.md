@@ -26,7 +26,33 @@
 ```
 
 Colab is a **worker**, not the system of record. Laptop owns UI, DB, scan state,
-evidence, config, reports, approvals.
+evidence, config, reports, approvals. Colab is treated as a **temporary compute
+runtime** (T4/L4/... = configuration change, not a rewrite).
+
+## AI Router
+
+Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router.py`):
+
+```
+                 AI ROUTER
+                      │
+          ┌───────────┴───────────┐
+          │                       │
+          ▼                       ▼
+    LOCAL OLLAMA            COLAB OLLAMA (GPU tunnel)
+    available?             approved AND available?
+          │                       │
+          └───────────┬───────────┘
+                      ▼
+                   Result
+    none available → ModelUnavailableError (graceful task queue / shown as inactive)
+```
+
+- Priority: approved Colab → local → graceful failure.
+- `strict_local` = LOCAL ONLY: Colab never used, regardless of approval.
+- Zero-AI install is supported: router degrades without any Ollama.
+- Colab AI worker is NOT a permanent server; it is a disposable runtime whose
+  disappearance yields `interrupted`/inactive states, never wrong results.
 
 ## Current (Phase 1 realisation)
 

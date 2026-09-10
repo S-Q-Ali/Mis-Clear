@@ -21,6 +21,14 @@ Deterministic security rules; AI assists reasoning but never lowers safety.
   instructions" is content, never instructions. SSRF-safe fetching.
 - External tools run sandboxed per adapter contract (`run(target) -> ToolResult`).
 
+## AI routing safety
+- Sensitive prompts never leave the laptop unless the user explicitly approves
+  HYBRID mode for that data.
+- `ModelRouter` uses Colab only when approved AND available; `strict_local`
+  mode forbids Colab entirely.
+- No AI backend available is a valid state: the app degrades, it never
+  substitutes a weaker cloud model silently.
+
 ## Transport
 - Backend binds `127.0.0.1` only unless the user explicitly enables otherwise.
 - CORS restricted to local Vite origin by default.

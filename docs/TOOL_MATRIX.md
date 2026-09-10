@@ -22,8 +22,8 @@ run(target) -> ToolResult
 | OpenCV | image ops | `tools/photo/` | planned (Phase 7) |
 | Tesseract | OCR | `tools/photo/` | planned (Phase 7) |
 | pHash | perceptual hashing | `tools/photo/` | planned (Phase 7) |
-| Ollama Qwen | local reasoning | `app/backend/services/model_router.py` | blocked (Phase 3) |
-| Ollama Qwen-VL/Gemma | local vision | same | blocked (Phase 3) |
+| Ollama Qwen | local reasoning | `app/backend/services/model_router.py` | ✅ router code (backend optional) |
+| Ollama Qwen-VL/Gemma | local vision | same | ✅ router code (backend optional) |
 | Colab T4 | heavy vision/OCR/embeddings | `colab/` | planned (Phase 8) |
 
 ## Policy

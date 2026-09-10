@@ -1,8 +1,27 @@
 # COLAB_GPU_ARCHITECTURE
 
 ## Role
-Optional GPU worker for heavy computation (vision batch, OCR batch, embeddings).
-Never the system of record. Local-only mode works without it.
+Optional **temporary compute runtime** for heavy work. Two worker modes:
+
+1. **Colab GPU Worker** — batch vision/OCR/embeddings (image pipelines, Phase 7/8).
+2. **Colab Ollama AI Worker** — Ollama served from a Colab/site tunnel
+   (e.g. `collab-ollama`), used by `ModelRouter` for inference when approved.
+
+Colab is never the system of record, and the app never depends on it:
+Colab down → local Ollama (if any) → graceful degradation. Switching the remote
+compute to a T4/L4/A100 server is a **configuration change** only.
+
+## Routing (ModelRouter)
+`app/backend/services/model_router.py`:
+- Colab Ollama used only when **explicitly approved** AND available.
+- `strict_local` (LOCAL ONLY mode) forbids Colab entirely.
+- No backend available → `ModelUnavailableError` → UI shows AI as inactive; work continues.
+
+## Privacy modes
+- **LOCAL ONLY** — sensitive data never leaves the laptop.
+- **HYBRID** — user explicitly approves selected data → Colab → inference →
+  result back → temporary data cleanup (`data_deleted: true`).
+- **OFFLINE** — no network AI processing at all.
 
 ## Data flow
 ```
