@@ -88,6 +88,51 @@ def make_cache(profile):
     return cdir
 
 
+def make_firefox_places(profile):
+    dbp = os.path.join(profile, "places.sqlite")
+    conn = sqlite3.connect(dbp)
+    conn.executescript(
+        """
+        CREATE TABLE moz_places (id INTEGER PRIMARY KEY, url TEXT, title TEXT);
+        CREATE TABLE moz_historyvisits (id INTEGER PRIMARY KEY, place_id INTEGER);
+        CREATE TABLE moz_bookmarks (id INTEGER PRIMARY KEY, fk INTEGER);
+        """
+    )
+    conn.execute("INSERT INTO moz_places (url,title) VALUES ('https://pornhub.com/p','P')")
+    conn.execute("INSERT INTO moz_places (url,title) VALUES ('https://xvideos.com/v','X')")
+    conn.execute("INSERT INTO moz_places (url,title) VALUES ('https://www.xvideos.com/bookmarked','B')")
+    conn.execute("INSERT INTO moz_places (url,title) VALUES ('https://news.example.com','N')")
+    conn.execute("INSERT INTO moz_historyvisits (place_id) VALUES (1)")
+    conn.execute("INSERT INTO moz_historyvisits (place_id) VALUES (2)")
+    conn.execute("INSERT INTO moz_historyvisits (place_id) VALUES (3)")
+    conn.execute("INSERT INTO moz_bookmarks (fk) VALUES (3)")
+    conn.commit()
+    conn.close()
+    return dbp
+
+
+def make_firefox_cookies(profile):
+    dbp = os.path.join(profile, "cookies.sqlite")
+    conn = sqlite3.connect(dbp)
+    conn.execute("CREATE TABLE moz_cookies (id INTEGER PRIMARY KEY, host TEXT, name TEXT)")
+    conn.execute("INSERT INTO moz_cookies (host,name) VALUES ('xvideos.com','sid')")
+    conn.execute("INSERT INTO moz_cookies (host,name) VALUES ('gmail.com','lsid')")
+    conn.commit()
+    conn.close()
+    return dbp
+
+
+def make_firefox_formhistory(profile):
+    dbp = os.path.join(profile, "formhistory.sqlite")
+    conn = sqlite3.connect(dbp)
+    conn.execute("CREATE TABLE moz_formhistory (id INTEGER PRIMARY KEY, fieldname TEXT, value TEXT)")
+    conn.execute("INSERT INTO moz_formhistory (fieldname,value) VALUES ('email','test@pornhub.com')")
+    conn.execute("INSERT INTO moz_formhistory (fieldname,value) VALUES ('city','Lahore')")
+    conn.commit()
+    conn.close()
+    return dbp
+
+
 def db_count(path, table):
     if not os.path.isfile(path):
         return -1
@@ -162,6 +207,51 @@ def test_autofill():
     shutil.rmtree(profile, ignore_errors=True)
 
 
+def test_firefox_history():
+    print("history_cleaner (firefox places)")
+    profile = os.path.join(tempfile.gettempdir(), "mc_test_ff_hist")
+    shutil.rmtree(profile, ignore_errors=True)
+    os.makedirs(profile, exist_ok=True)
+    dbp = make_firefox_places(profile)
+    check("ff scan finds 3 matches", history_cleaner.scan(profile, {"pornhub.com", "xvideos.com"}, []) == 3)
+    det = history_cleaner.details(profile, {"pornhub.com", "xvideos.com"}, [])
+    check("ff details returns 3 with matched_by", len(det) == 3 and all("matched_by" in d for d in det))
+    rows = history_cleaner.clean(profile, {"pornhub.com", "xvideos.com"}, [])
+    check("ff clean removes 5 rows (3 visits + 2 places)", rows == 5)
+    check("ff bookmarked place kept", db_count(dbp, "moz_places") == 2)
+    check("ff visits all cleared (visit history removed even for bookmarked)", db_count(dbp, "moz_historyvisits") == 0)
+    shutil.rmtree(profile, ignore_errors=True)
+
+
+def test_firefox_cookies():
+    print("cookie_cleaner (firefox moz_cookies)")
+    profile = os.path.join(tempfile.gettempdir(), "mc_test_ff_cook")
+    shutil.rmtree(profile, ignore_errors=True)
+    os.makedirs(profile, exist_ok=True)
+    dbp = make_firefox_cookies(profile)
+    check("ff cookie scan finds 1", cookie_cleaner.scan(profile, {"xvideos.com"}, []) == 1)
+    det = cookie_cleaner.details(profile, {"xvideos.com"}, [])
+    check("ff cookie details correct", det and det[0]["host"] == "xvideos.com" and det[0]["name"] == "sid")
+    rows = cookie_cleaner.clean(profile, {"xvideos.com"}, [])
+    check("ff clean removes 1 cookie", rows == 1 and db_count(dbp, "moz_cookies") == 1)
+    shutil.rmtree(profile, ignore_errors=True)
+
+
+def test_firefox_autofill():
+    print("autofill_cleaner (firefox moz_formhistory)")
+    profile = os.path.join(tempfile.gettempdir(), "mc_test_ff_auto")
+    shutil.rmtree(profile, ignore_errors=True)
+    os.makedirs(profile, exist_ok=True)
+    dbp = make_firefox_formhistory(profile)
+    check("ff autofill keyword scan finds 1", autofill_cleaner.scan(profile, set(), ["pornhub"]) == 1)
+    check("ff autofill ignores blocklist (no url)", autofill_cleaner.scan(profile, {"xvideos.com"}, []) == 0)
+    det = autofill_cleaner.details(profile, set(), ["pornhub"])
+    check("ff autofill details correct", len(det) == 1 and det[0]["matched_by"] == "pornhub")
+    rows = autofill_cleaner.clean(profile, set(), ["pornhub"])
+    check("ff clean removes 1 form entry", rows == 1 and db_count(dbp, "moz_formhistory") == 1)
+    shutil.rmtree(profile, ignore_errors=True)
+
+
 def test_cache():
     print("cache_cleaner")
     profile = os.path.join(tempfile.gettempdir(), "mc_test_cache")
@@ -192,6 +282,9 @@ if __name__ == "__main__":
     test_history()
     test_cookies()
     test_autofill()
+    test_firefox_history()
+    test_firefox_cookies()
+    test_firefox_autofill()
     test_cache()
     print(f"\n===== RESULT: {PASS} passed, {FAIL} failed =====")
     sys.exit(1 if FAIL else 0)
