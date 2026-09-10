@@ -1,41 +1,53 @@
-"""Database engine and declarative base. Schema models arrive in Phase 4."""
+"""Database engine, session, and schema management (SQLite/SQLAlchemy)."""
+
+from __future__ import annotations
 
 from pathlib import Path
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-from app.backend.config import settings
+from app.backend.config import Settings, settings
 
 
 class Base(DeclarativeBase):
     pass
 
 
-def _ensure_parent(path: str) -> None:
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
+def build_engine(db_path: str) -> Engine:
+    """Create a SQLite engine for the given path (used by app and tests)."""
+    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+    return create_engine(
+        f"sqlite:///{db_path}",
+        connect_args={"check_same_thread": False},
+    )
 
 
-_ensure_parent(settings.database_path)
-
-engine = create_engine(
-    f"sqlite:///{settings.database_path}",
-    connect_args={"check_same_thread": False},
-)
-
+engine = build_engine(settings.database_path)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
 def init_db() -> None:
-    # Import models here so they register on Base.metadata.
-    import app.backend.models  # noqa: F401
+    """Ensure persistence directory exists and schema is migrated (idempotent)."""
+    from app.backend.database.migrations import migrate
 
-    if not Path(settings.database_path).exists() or Path(settings.database_path).stat().st_size == 0:
-        Base.metadata.create_all(bind=engine)
+    migrate(engine)
+
+
+def init_db_at(db_path: str) -> Engine:
+    """Migrate a schema at a specific path (test isolation) and return its engine."""
+    import app.backend.models  # noqa: F401  # register models on Base.metadata
+
+    from app.backend.database.migrations import migrate
+
+    eng = build_engine(db_path)
+    migrate(eng)
+    return eng
 
 
 def get_db():
-    db = SessionLocal()
+    db: Session = SessionLocal()
     try:
         yield db
     finally:

@@ -70,7 +70,7 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
 | Scan orchestration | `app/backend/services/*` | 5 |
 | Agent dispatch | `app/backend/agents/*` | 5 |
 | Tool adapters | `app/backend/tools/*` + `tools/*` | 6–7 |
-| Models | `app/backend/models.py` | 4 |
-| DB engine | `app/backend/database/*` | 4 |
+| Models | `app/backend/models.py` | 4 ✅ |
+| DB engine + migrations | `app/backend/database/*` | 4 ✅ |
 | Security | `app/backend/security/*` | 13 |
 | Colab worker | `colab/*` | 8 |

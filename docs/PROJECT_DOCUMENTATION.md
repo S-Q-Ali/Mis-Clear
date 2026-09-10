@@ -20,8 +20,8 @@ and coverage gaps.
 | 0 | Environment audit | ✅ `docs/ENVIRONMENT_REPORT.md` |
 | 1 | Bootstrap | ✅ structure, backend/frontend/test skeletons, health verified |
 | 2 | Skills/Graphify | ✅ skills installed + `docs/SKILL_MATRIX.md` + project graph |
-| 3 | Local AI / AI Router | ✅ `ModelRouter` code + tests (live Ollama deferred: no backend installed) |
-| 4 | Database schema | ⬜ placeholder models only |
+| 3 | Local AI / AI Router | ✅ `ModelRouter` code + tests (live Ollama deferred) |
+| 4 | Database schema | ✅ 9 tables + versioned migrations; CRUD tests |
 | 5 | Backend API | ⬜ only `/health` exists |
 | 6 | OSINT adapters | ⬜ empty packages |
 | 7 | Photo forensics | ⬜ empty packages |
