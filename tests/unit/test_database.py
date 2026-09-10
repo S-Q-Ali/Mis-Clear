@@ -17,7 +17,7 @@ def _fresh_session(tmp_path):
 
 def test_migrate_creates_schema_and_tracks_version(tmp_path):
     engine, _ = _fresh_session(tmp_path)
-    assert current_version(engine) == 1
+    assert current_version(engine) == 3
     with engine.connect() as conn:
         tables = {
             row[0]
@@ -28,6 +28,7 @@ def test_migrate_creates_schema_and_tracks_version(tmp_path):
     expected = {
         "scans", "identities", "relationships", "findings", "images",
         "actions", "jobs", "tool_runs", "audit_logs", "schema_versions",
+        "idempotency_keys",
     }
     assert expected <= tables
 
@@ -37,7 +38,7 @@ def test_migrate_is_idempotent(tmp_path):
     init_db_at(str(db_path))
     init_db_at(str(db_path))  # second run must not raise
     engine = _fresh_session(tmp_path)[0]
-    assert current_version(engine) == 1
+    assert current_version(engine) == 3
 
 
 def test_scan_gives_rise_to_findings_and_tool_runs(tmp_path):

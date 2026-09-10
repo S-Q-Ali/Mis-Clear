@@ -22,7 +22,7 @@ and coverage gaps.
 | 2 | Skills/Graphify | ✅ skills installed + `docs/SKILL_MATRIX.md` + project graph |
 | 3 | Local AI / AI Router | ✅ `ModelRouter` code + tests (live Ollama deferred) |
 | 4 | Database schema | ✅ 9 tables + versioned migrations; CRUD tests |
-| 5 | Backend API | ⬜ only `/health` exists |
+| 5 | Backend API | ✅ scans/findings/jobs/workers/reports + idempotency + error shape (28 tests) |
 | 6 | OSINT adapters | ⬜ empty packages |
 | 7 | Photo forensics | ⬜ empty packages |
 | 8 | Colab worker | ⬜ protocol skeleton only |
@@ -30,11 +30,17 @@ and coverage gaps.
 
 ## Current implementation
 
-- **Backend** (`app/backend`): FastAPI app factory, `/health` endpoint,
-  pydantic-settings config, SQLite engine (SQLAlchemy, schema lands in Phase 4).
+- **Backend** (`app/backend`): FastAPI app factory; REST control plane —
+  `POST/GET /api/scans`, `/api/scans/{id}/findings`, `/api/scans/{id}/tool-runs`,
+  `/api/jobs`, `/api/workers`, `/api/reports/{scan_id}`; idempotent scan creation
+  (`Idempotency-Key` header, dedupe + replay); consistent error envelope
+  `{"error": {"code", "message", "details"}}` (422/404/409/500); contract-first
+  camelCase Pydantic schemas (`app/backend/schemas.py`); SQLite engine
+  (SQLAlchemy) with versioned migrations.
 - **Frontend** (`app/frontend`): Vite + React + TypeScript scaffold (builds clean).
 - **Protocol** (`colab/protocol.py`): versioned `JobRequest`/`JobResult` dataclasses.
-- **Tests**: `tests/unit/test_health.py`; 18 pytest functions green.
+- **Tests**: `tests/unit/*`, `tests/integration/test_api.py`; 28 pytest functions green
+  + legacy suite (46+34) intact.
 
 ## Architecture (landscape)
 

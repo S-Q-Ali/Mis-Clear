@@ -137,7 +137,7 @@ class Job(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     job_id: Mapped[str] = mapped_column(String(36), unique=True)
-    scene_id: Mapped[int | None] = mapped_column(ForeignKey("scans.id"), nullable=True)
+    scan_id: Mapped[int | None] = mapped_column(ForeignKey("scans.id"), nullable=True)
     job_type: Mapped[str] = mapped_column(String(40))
     protocol_version: Mapped[str] = mapped_column(String(8), default="1")
     status: Mapped[str] = mapped_column(String(20), default="queued")
@@ -191,3 +191,14 @@ class SchemaVersion(Base):
 
     version: Mapped[int] = mapped_column(primary_key=True)
     applied_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class IdempotencyKey(Base):
+    """Ends for POST /api/scans — atomic claim via PK; guards same-key retries."""
+
+    __tablename__ = "idempotency_keys"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    request_hash: Mapped[str] = mapped_column(String(64))
+    scan_id: Mapped[int | None] = mapped_column(ForeignKey("scans.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)

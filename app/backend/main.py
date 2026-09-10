@@ -1,10 +1,18 @@
 """Application factory for the Privacy Guardian control plane."""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.backend.api.findings import router as findings_router
 from app.backend.api.health import router as health_router
+from app.backend.api.jobs import router as jobs_router
+from app.backend.api.reports import router as reports_router
+from app.backend.api.scans import router as scans_router
+from app.backend.api.workers import router as workers_router
 from app.backend.config import settings
+from app.backend.database.engine import init_db
+from app.backend.errors import http_exception_handler, validation_exception_handler
 
 
 def create_app() -> FastAPI:
@@ -22,8 +30,21 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(HTTPException, http_exception_handler)
+
     app.include_router(health_router)
+    app.include_router(scans_router)
+    app.include_router(findings_router)
+    app.include_router(jobs_router)
+    app.include_router(workers_router)
+    app.include_router(reports_router)
     return app
 
 
 app = create_app()
+
+
+@app.on_event("startup")
+def _startup() -> None:
+    init_db()

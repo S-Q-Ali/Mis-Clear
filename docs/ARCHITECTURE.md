@@ -54,11 +54,20 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
 - Colab AI worker is NOT a permanent server; it is a disposable runtime whose
   disappearance yields `interrupted`/inactive states, never wrong results.
 
-## Current (Phase 1 realisation)
+## Current (Phase 5 realisation)
 
-- `app/backend/main.py` — FastAPI `create_app()`; CORS restricted to local Vite origin; `/health` wired.
+- `app/backend/main.py` — FastAPI `create_app()`; CORS restricted to local Vite origin;
+  exception handlers (validation → 422, HTTP → consistent envelope); routers wired.
 - `app/backend/config.py` — `Settings` (env prefix `PG_`, `.env` support).
 - `app/backend/database/engine.py` — SQLite `engine`, `SessionLocal`, `init_db()`, `get_db()`.
+- `app/backend/schemas.py` — contract-first Pydantic IO (camelCase JSON, snake_case ORM via
+  alias mapping; `Paginated[T]` + `pagination_meta`, pageSize ≤ 100).
+- `app/backend/errors.py` — single error envelope + handlers.
+- `app/backend/api/{health,scans,findings,jobs,workers,reports}.py` — REST control plane
+  (handlers: scans CRUD/findings/tool-runs, jobs CRUD, workers status/probe, reports aggregation).
+- `app/backend/services/{model_router,idempotency}.py` — AI routing; idempotency keys
+  (`idempotency_keys` table: atomic claim, replay/mismatch/in-flight resolution).
+- `app/backend/models.py` + `database/migrations.py` — 9 tables + versioned migrations (v3).
 - `app/frontend` — Vite React-TS scaffold, dev server on 5173.
 - `colab/protocol.py` — job protocol types.
 
@@ -66,8 +75,8 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
 
 | Concern | Module | Phase |
 |---|---|---|
-| API | `app/backend/api/*` | 5 |
-| Scan orchestration | `app/backend/services/*` | 5 |
+| API | `app/backend/api/*` | 5 ✅ |
+| Scan orchestration | `app/backend/services/*` | 5 ✅ |
 | Agent dispatch | `app/backend/agents/*` | 5 |
 | Tool adapters | `app/backend/tools/*` + `tools/*` | 6–7 |
 | Models | `app/backend/models.py` | 4 ✅ |
