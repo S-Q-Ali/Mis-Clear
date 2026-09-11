@@ -1,0 +1,12 @@
+{
+  "sites": [
+    {
+      "name": "example-profiles",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://example.test/users/{target}",
+      "exists_marker": "user-profile",
+      "error_status_codes": [404]
+    }
+  ]
+}

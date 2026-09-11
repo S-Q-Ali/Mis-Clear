@@ -1,0 +1,13 @@
+{
+  "sites": [
+    {
+      "name": "example-members",
+      "mode": "email",
+      "method": "POST",
+      "probe_url": "https://example.test/members/check",
+      "form_field": "email",
+      "exists_marker": "is using this email address",
+      "missing_marker": "not registered"
+    }
+  ]
+}

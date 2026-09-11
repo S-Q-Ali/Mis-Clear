@@ -23,7 +23,7 @@ and coverage gaps.
 | 3 | Local AI / AI Router | ✅ `ModelRouter` code + tests (live Ollama deferred) |
 | 4 | Database schema | ✅ 9 tables + versioned migrations; CRUD tests |
 | 5 | Backend API | ✅ scans/findings/jobs/workers/reports + idempotency + error shape (28 tests) |
-| 6 | OSINT adapters | ⬜ empty packages |
+| 6 | OSINT adapters | ✅ email/username/web tools + orchestrator + run endpoint (53 tests) |
 | 7 | Photo forensics | ⬜ empty packages |
 | 8 | Colab worker | ⬜ protocol skeleton only |
 | 9–15 | Graph/Risk/Deletion/Frontend/Security/Testing/Audit | ⬜ |
@@ -32,15 +32,24 @@ and coverage gaps.
 
 - **Backend** (`app/backend`): FastAPI app factory; REST control plane —
   `POST/GET /api/scans`, `/api/scans/{id}/findings`, `/api/scans/{id}/tool-runs`,
-  `/api/jobs`, `/api/workers`, `/api/reports/{scan_id}`; idempotent scan creation
-  (`Idempotency-Key` header, dedupe + replay); consistent error envelope
-  `{"error": {"code", "message", "details"}}` (422/404/409/500); contract-first
-  camelCase Pydantic schemas (`app/backend/schemas.py`); SQLite engine
-  (SQLAlchemy) with versioned migrations.
+`/api/jobs`, `/api/workers`, `/api/reports/{scan_id}`; idempotent scan creation
+   (`Idempotency-Key` header, dedupe + replay); consistent error envelope
+   `{"error": {"code", "message", "details"}}` (422/404/409/500); contract-first
+   camelCase Pydantic schemas (`app/backend/schemas.py`); SQLite engine
+   (SQLAlchemy) with versioned migrations.
+- **OSINT adapters** (`tools/`): stable `run(target) -> ToolResult` interface
+  (`tools/base.py`); holehe/sherlock via site manifests (`tools/sitecheck.py`),
+  web tools DNS-over-HTTPS (`tools/web/dns.py`), WHOIS/RDAP (`tools/web/whois.py`),
+  DDG search (`tools/web/search.py`), GitHub (`tools/web/github.py`);
+  `tools/registry.py` maps target types → adapters; `POST /api/scans/{id}/run`
+  executes via `app/backend/services/scan_orchestrator.py` (persists ToolRun +
+  Finding + Identity). All network in adapters is read-only public OSINT; a
+  failure degrades to honest coverage, never a crash.
 - **Frontend** (`app/frontend`): Vite + React + TypeScript scaffold (builds clean).
 - **Protocol** (`colab/protocol.py`): versioned `JobRequest`/`JobResult` dataclasses.
-- **Tests**: `tests/unit/*`, `tests/integration/test_api.py`; 28 pytest functions green
-  + legacy suite (46+34) intact.
+- **Tests**: `tests/unit/*`, `tests/integration/*`; 53 pytest functions green
+  + legacy suite (46+34) intact. Adapter tests run on fake transports — no
+  live network, synthetic data only.
 
 ## Architecture (landscape)
 

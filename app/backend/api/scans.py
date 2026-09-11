@@ -1,10 +1,11 @@
-"""Scan endpoints: create (idempotent), list (paginated), detail, sub-resources."""
+"""Scan endpoints: create (idempotent), list (paginated), detail, sub-resources, run."""
 
 from __future__ import annotations
 
 from typing import Any
 
 from fastapi import APIRouter, Depends, Header, Query, Response
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -24,8 +25,27 @@ from app.backend.schemas import (
     pagination_meta,
 )
 from app.backend.services import idempotency
+from app.backend.services.scan_orchestrator import run_scan
 
 router = APIRouter(prefix="/api/scans", tags=["scans"])
+
+
+class ScanRunRequest(BaseModel):
+    """Optional tool subset for POST /api/scans/{id}/run."""
+
+    tools: list[str] | None = None
+
+
+@router.post("/{scan_id}/run", status_code=200)
+def run_scan_endpoint(scan_id: int, body: ScanRunRequest | None = None, db: Session = Depends(get_db)) -> ScanOut:
+    if not settings.osint_enabled:
+        raise api_error(409, "OSINT_DISABLED", "OSINT tool adapters are disabled by configuration")
+    scan = db.get(m.Scan, scan_id)
+    if scan is None:
+        raise api_error(404, "NOT_FOUND", f"Scan {scan_id} not found")
+    run_scan(db, scan, tool_filter=body.tools if body and body.tools else None)
+    updated = db.get(m.Scan, scan_id)
+    return ScanOut.model_validate(updated)
 
 
 @router.post("", status_code=201)

@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     default_scan_mode: str = "local"
     hybrid_requires_explicit_approval: bool = True
 
+    # OSINT tool adapters (Phase 6)
+    osint_enabled: bool = True
+    osint_timeout_seconds: float = 10.0
+    osint_manifest_email: str = "tools/site_manifests/email.json"
+    osint_manifest_username: str = "tools/site_manifests/username.json"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
