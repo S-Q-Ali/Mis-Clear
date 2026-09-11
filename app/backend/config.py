@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     osint_manifest_email: str = "tools/site_manifests/email.json"
     osint_manifest_username: str = "tools/site_manifests/username.json"
 
+    # Photo forensics (Phase 7)
+    upload_dir: str = "data/uploads"
+    upload_max_bytes: int = 20 * 1024 * 1024  # 20 MB
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

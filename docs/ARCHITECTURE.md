@@ -69,10 +69,14 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
   (`idempotency_keys` table: atomic claim, replay/mismatch/in-flight resolution).
 - `app/backend/models.py` + `database/migrations.py` — 9 tables + versioned migrations (v3).
 - `app/backend/services/scan_orchestrator.py` — runs adapters for a scan, persists
-  `ToolRun`/`Finding`/`Identity`, aggregates honest coverage; `POST /api/scans/{id}/run`.
-- `tools/` — OSINT adapters (`base.py` contract, `sitecheck.py` engine,
+  `ToolRun`/`Finding`/`Identity` (image scans also persist `Image`), aggregates
+  honest coverage; `POST /api/scans/{id}/run` + `POST /api/scans/{id}/image` upload.
+- `tools/` — adapters (`base.py` contract, `sitecheck.py` engine,
   `email/holehe.py`, `username/sherlock.py`, `web/{dns,whois,search,github}.py`,
   `registry.py`, `site_manifests/` samples).
+- `tools/photo/` — local-first photo pipeline (`base.py` helpers, `hash.py`,
+  `phash.py`, `exif.py`, `qr.py`, `registry.py`); `vision.py` routes vision/OCR
+  to the approved Colab worker (Phase 8) with graceful `blocked` degradation.
 - `app/frontend` — Vite React-TS scaffold, dev server on 5173.
 - `colab/protocol.py` — job protocol types.
 
@@ -85,6 +89,7 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
 | Agent dispatch | `app/backend/agents/*` | 6 |
 | Tool adapters | `app/backend/tools/*` + `tools/*` | 6–7 ✅(6) |
 | OSINT adapters | `tools/{base,sitecheck,registry,email,username,web}` | 6 ✅ |
+| Photo forensics | `tools/photo/*` | 7 ✅ |
 | Models | `app/backend/models.py` | 4 ✅ |
 | DB engine + migrations | `app/backend/database/*` | 4 ✅ |
 | Security | `app/backend/security/*` | 13 |

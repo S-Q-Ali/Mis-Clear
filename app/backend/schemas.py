@@ -97,6 +97,18 @@ class ToolRunOut(Camelised):
     completedAt: datetime | None = forward(("completedAt", "completed_at"))
 
 
+class ImageOut(Camelised):
+    id: int
+    scanId: int | None = forward(("scanId", "scan_id"))
+    filename: str
+    localPath: str = forward(("localPath", "local_path"))
+    md5: str | None = None
+    sha256: str | None = None
+    phash: str | None = None
+    exif: dict[str, Any] | None = None
+    createdAt: datetime = forward(("createdAt", "created_at"))
+
+
 class JobOut(Camelised):
     id: int
     jobId: str = forward(("jobId", "job_id"))

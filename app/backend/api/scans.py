@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+from io import BytesIO
+from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, Header, Query, Response
+from fastapi import APIRouter, Depends, Header, Query, Response, UploadFile
+from fastapi import File as FastAPIFile
+from PIL import Image as PILImage
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -17,11 +22,12 @@ from app.backend.errors import api_error
 from app.backend.schemas import (
     PAGE_SIZE_DEFAULT,
     PAGE_SIZE_MAX,
+    FindingOut,
+    ImageOut,
+    Paginated,
     ScanCreate,
     ScanOut,
     ToolRunOut,
-    FindingOut,
-    Paginated,
     pagination_meta,
 )
 from app.backend.services import idempotency
@@ -46,6 +52,66 @@ def run_scan_endpoint(scan_id: int, body: ScanRunRequest | None = None, db: Sess
     run_scan(db, scan, tool_filter=body.tools if body and body.tools else None)
     updated = db.get(m.Scan, scan_id)
     return ScanOut.model_validate(updated)
+
+
+@router.post("/{scan_id}/image", status_code=201)
+async def upload_image(
+    scan_id: int,
+    file: UploadFile = FastAPIFile(...),
+    db: Session = Depends(get_db),
+) -> ScanOut:
+    scan = db.get(m.Scan, scan_id)
+    if scan is None:
+        raise api_error(404, "NOT_FOUND", f"Scan {scan_id} not found")
+    if scan.target_type != "image":
+        raise api_error(400, "INVALID_TARGET_TYPE", "This scan was not created as targetType=image")
+    if scan.status == "running":
+        raise api_error(409, "SCAN_RUNNING", "Scan is already running")
+
+    contents = await file.read()
+    if len(contents) > settings.upload_max_bytes:
+        raise api_error(413, "FILE_TOO_LARGE", f"Upload exceeds {settings.upload_max_bytes} bytes limit")
+    if len(contents) == 0:
+        raise api_error(422, "EMPTY_FILE", "Uploaded file is empty")
+
+    try:
+        probe = PILImage.open(BytesIO(contents))
+        probe.verify()
+    except Exception as exc:
+        raise api_error(422, "INVALID_IMAGE", f"Not a valid image: {exc}") from exc
+
+    suffix = Path(file.filename or "").suffix.lower()[1:]
+    suffix = "".join(c for c in suffix if c.isalnum())[:5] or "img"
+    display_name = Path(file.filename or "image").name[:255]
+    safe = f"{scan_id}_{uuid4().hex[:8]}.{suffix}"
+    upload_basedir = Path(settings.upload_dir)
+    upload_basedir.mkdir(parents=True, exist_ok=True)
+    store_path = upload_basedir / safe
+    store_path.write_bytes(contents)
+
+    scan.target_value = str(store_path)
+    db.add(
+        m.Image(
+            scan_id=scan.id,
+            filename=display_name,
+            local_path=str(store_path),
+        )
+    )
+    scan.status = "pending"
+    db.commit()
+    run_scan(db, scan, tool_filter=None)
+    updated = db.get(m.Scan, scan_id)
+    return ScanOut.model_validate(updated)
+
+
+@router.get("/{scan_id}/image")
+def get_image(scan_id: int, db: Session = Depends(get_db)) -> ImageOut:
+    image = db.execute(
+        select(m.Image).where(m.Image.scan_id == scan_id).order_by(m.Image.id.desc())
+    ).scalars().first()
+    if image is None:
+        raise api_error(404, "NOT_FOUND", f"No image stored for scan {scan_id}")
+    return ImageOut.model_validate(image)
 
 
 @router.post("", status_code=201)

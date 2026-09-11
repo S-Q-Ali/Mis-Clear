@@ -17,11 +17,12 @@ run(target) -> ToolResult
 | DNS | DNS records (DNS-over-HTTPS) | `tools/web/dns.py` | ✅ Phase 6 |
 | Public search | web evidence (DDG HTML) | `tools/web/search.py` | ✅ Phase 6 |
 | GitHub search | handle/code exposure | `tools/web/github.py` | ✅ Phase 6 |
-| ExifTool | EXIF metadata | `tools/photo/` | planned (Phase 7) |
-| ImageMagick | image transform | `tools/photo/` | planned (Phase 7) |
-| OpenCV | image ops | `tools/photo/` | planned (Phase 7) |
-| Tesseract | OCR | `tools/photo/` | planned (Phase 7) |
-| pHash | perceptual hashing | `tools/photo/` | planned (Phase 7) |
+| ExifTool | EXIF metadata | `tools/photo/exif.py` (Pillow) | ✅ Phase 7 |
+| ImageMagick | image transform | not required (Pillow) | – |
+| OpenCV | image ops (QR decode) | `tools/photo/qr.py` (opencv-headless) | ✅ Phase 7 |
+| Pillow | image load/EXIF/dhash | `tools/photo/base.py` | ✅ Phase 7 |
+| Tesseract | OCR | deferred to Colab vision worker | ⬜ (Phase 8) |
+| pHash | perceptual hashing | `tools/photo/phash.py` (d-hash) | ✅ Phase 7 |
 | Ollama Qwen | local reasoning | `app/backend/services/model_router.py` | ✅ router code (backend optional) |
 | Ollama Qwen-VL/Gemma | local vision | same | ✅ router code (backend optional) |
 | Colab T4 | heavy vision/OCR/embeddings | `colab/` | planned (Phase 8) |

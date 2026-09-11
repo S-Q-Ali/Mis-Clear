@@ -24,7 +24,7 @@ and coverage gaps.
 | 4 | Database schema | ✅ 9 tables + versioned migrations; CRUD tests |
 | 5 | Backend API | ✅ scans/findings/jobs/workers/reports + idempotency + error shape (28 tests) |
 | 6 | OSINT adapters | ✅ email/username/web tools + orchestrator + run endpoint (53 tests) |
-| 7 | Photo forensics | ⬜ empty packages |
+| 7 | Photo forensics | ✅ local pipeline: hashes/pHash/EXIF/QR + vision router stub + upload API (71 tests) |
 | 8 | Colab worker | ⬜ protocol skeleton only |
 | 9–15 | Graph/Risk/Deletion/Frontend/Security/Testing/Audit | ⬜ |
 
@@ -45,11 +45,19 @@ and coverage gaps.
   executes via `app/backend/services/scan_orchestrator.py` (persists ToolRun +
   Finding + Identity). All network in adapters is read-only public OSINT; a
   failure degrades to honest coverage, never a crash.
+- **Photo forensics** (`tools/photo/`): local-first pipeline (Pillow + OpenCV
+  headless + stdlib hashlib) — md5/sha256 (`hash.py`), perceptual d-hash
+  (`phash.py`), EXIF/GPS (`exif.py`, untrusted metadata), QR decode (`qr.py`);
+  `vision.py` routes vision/OCR to the approved Colab AI worker (Phase 8) with
+  graceful `blocked` degradation (no fabricated findings). `POST
+  /api/scans/{id}/image` uploads (validated magic bytes + size cap) to
+  `data/uploads`, then the orchestrator persists an `Image` row (hashes/pHash)
+  + findings for `targetType=image` scans.
 - **Frontend** (`app/frontend`): Vite + React + TypeScript scaffold (builds clean).
 - **Protocol** (`colab/protocol.py`): versioned `JobRequest`/`JobResult` dataclasses.
-- **Tests**: `tests/unit/*`, `tests/integration/*`; 53 pytest functions green
-  + legacy suite (46+34) intact. Adapter tests run on fake transports — no
-  live network, synthetic data only.
+- **Tests**: `tests/unit/*`, `tests/integration/*`; 71 pytest functions green
+  + legacy 16-test suite intact. Adapter tests run on fake transports / synthetic
+  images generated at test time — no live network, no real personal data.
 
 ## Architecture (landscape)
 
@@ -63,11 +71,11 @@ Colab = disposable GPU worker (vision/OCR/embedding), never system of record.
 
 ## Dependencies
 
-- Backend: fastapi, uvicorn, pydantic, pydantic-settings, sqlalchemy, httpx (managed via `uv`, `pyproject.toml`).
+- Backend: fastapi, uvicorn, pydantic, pydantic-settings, sqlalchemy, httpx, pillow, opencv-python-headless, python-multipart (managed via `uv`, `pyproject.toml`).
 - Frontend: react, typescript, vite (generated scaffold; Tailwind + UI primitives in Phase 12).
-- AI: Ollama (Qwen-family local reasoning; Gemma/Qwen-VL vision), models configurable.
-- OSINT (planned, Phase 6): holehe, sherlock, maigret, WHOIS/DNS, public search — behind stable adapters.
-- Image (planned, Phase 7): EXIF, OCR, hashes, pHash, local vision.
+- AI: Ollama (Qwen-family local reasoning; Gemma/Qwen-VL vision), models configurable. Heavy vision/OCR → approved Colab worker (Phase 8).
+- OSINT (Phase 6): holehe, sherlock, maigret, WHOIS/DNS, public search — behind stable adapters.
+- Image (Phase 7): Pillow (EXIF/dhash), OpenCV headless (QR), stdlib hashlib; OCR/local vision deferred to Colab worker.
 
 ## Security posture (summary)
 
