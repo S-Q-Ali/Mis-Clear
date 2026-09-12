@@ -25,14 +25,16 @@ and coverage gaps.
 | 5 | Backend API | ✅ scans/findings/jobs/workers/reports + idempotency + error shape (28 tests) |
 | 6 | OSINT adapters | ✅ email/username/web tools + orchestrator + run endpoint (53 tests) |
 | 7 | Photo forensics | ✅ local pipeline: hashes/pHash/EXIF/QR + vision router stub + upload API (71 tests) |
-| 8 | Colab worker | ⬜ protocol skeleton only |
-| 9–15 | Graph/Risk/Deletion/Frontend/Security/Testing/Audit | ⬜ |
+| 8 | Colab worker | ✅ capability probe, handler registry, worker lifecycle, notebook, laptop dispatcher+API (105 tests) |
+| 9 | Identity graph | ✅ deterministic link rules + cross-scan merge + graph API (121 tests) |
+| 10–15 | Risk/Deletion/Frontend/Security/Testing/Audit | ⬜ |
 
 ## Current implementation
 
 - **Backend** (`app/backend`): FastAPI app factory; REST control plane —
   `POST/GET /api/scans`, `/api/scans/{id}/findings`, `/api/scans/{id}/tool-runs`,
-`/api/jobs`, `/api/workers`, `/api/reports/{scan_id}`; idempotent scan creation
+  `/api/scans/{id}/graph` (+ `/rebuild`), `/api/jobs` (+ `/dispatch`/`/poll`),
+  `/api/workers`, `/api/reports/{scan_id}`; idempotent scan creation
    (`Idempotency-Key` header, dedupe + replay); consistent error envelope
    `{"error": {"code", "message", "details"}}` (422/404/409/500); contract-first
    camelCase Pydantic schemas (`app/backend/schemas.py`); SQLite engine
@@ -67,7 +69,15 @@ and coverage gaps.
   "dispatcher not configured" error), polls results, expires late jobs as
   `interrupted` (never auto-completed); API `POST /api/jobs/{id}/dispatch` +
   `/poll`. End-to-end Colab transport is optional and offline-safe.
-- **Tests**: `tests/unit/*`, `tests/integration/*`; 105 pytest functions green
+- **Identity graph** (`app/backend/services/identity_graph.py`, Phase 9):
+  deterministic rule-based relationships (no AI) between email/username →
+  profile → website → domain, `source` labels and URL tokens from evidence
+  (e.g. QR payloads); `canonical = lower(value)` is the cross-scan merge key;
+  `rebuild_scan_graph` idempotent; `graph_for_scan` returns the connected
+  component (nodes: kind/value/canonical/scanCount/evidenceCount; edges with
+  evidenceFindingId). Auto-linked best-effort after every scan run; API
+  `GET /api/scans/{id}/graph` + `POST /api/scans/{id}/graph/rebuild`.
+- **Tests**: `tests/unit/*`, `tests/integration/*`; 121 pytest functions green
   + legacy suite intact. Adapter tests run on fake transports (httpx.MockTransport)
   / synthetic images generated at test time — no live network, no real personal data.
 
@@ -76,7 +86,7 @@ and coverage gaps.
 ```
 LAPTOP ── React+TS UI → FastAPI control plane → scan orchestrator
    → local agents/tools (email/username/web/photo/risk)
-   → SQLite + evidence store
+   → SQLite + evidence store → identity graph (deterministic relationships)
    → optional Colab job dispatcher (explicit approval only)
 Colab = disposable GPU worker (vision/OCR/embedding), never system of record.
 ```

@@ -82,6 +82,11 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
   `capabilities.py` (GPU/CPU/model probe), `handlers.py` (job-type registry +
   honest AI handlers), `dispatch.py` (fetch/ack transport), `worker.py`
   (execute_job lifecycle + run_worker_main loop), `privacy_guardian_worker.ipynb`.
+- `app/backend/services/identity_graph.py` — deterministic relationship builder
+  (Phase 9): rule-based `link_scan` (username→profile→website→domain, source
+  labels, URL tokens from evidence), `rebuild_scan_graph`, and cross-scan
+  `graph_for_scan` (collapses identities by `(kind, canonical)`). Exposed via
+  `GET /api/scans/{id}/graph` + `POST /api/scans/{id}/graph/rebuild`.
 
 ## Module ownership map
 
@@ -98,3 +103,4 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
 | Security | `app/backend/security/*` | 13 |
 | Colab worker | `colab/*` | 8 ✅ |
 | Job dispatch | `app/backend/services/job_dispatcher.py` | 8 ✅ |
+| Identity graph | `app/backend/services/identity_graph.py` | 9 ✅ |
