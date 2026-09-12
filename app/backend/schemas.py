@@ -117,13 +117,16 @@ class JobOut(Camelised):
     protocolVersion: str = forward(("protocolVersion", "protocol_version"))
     status: str
     privacyMode: str = forward(("privacyMode", "privacy_mode"))
+    payload: dict[str, Any] | None = None
+    result: dict[str, Any] | None = None
+    errors: list[str] | None = None
     dataDeleted: bool = forward(("dataDeleted", "data_deleted"))
+    requestedCapabilities: list[str] | None = None
     worker: str | None = None
     createdAt: datetime = forward(("createdAt", "created_at"))
     startedAt: datetime | None = forward(("startedAt", "started_at"))
     completedAt: datetime | None = forward(("completedAt", "completed_at"))
     expiresAt: datetime | None = forward(("expiresAt", "expires_at"))
-    errors: list[str] | None = None
 
 
 class WorkerStatusOut(BaseModel):
