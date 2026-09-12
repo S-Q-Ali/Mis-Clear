@@ -31,7 +31,8 @@ and coverage gaps.
 | 11 | Deletion research | ✅ official org/procedure + DRAFT requests + human approve/decline (160 tests) |
 | 12 | Frontend UI | ✅ React UI over the control plane (build/lint clean, 162 tests) |
 | 13 | Security | ✅ guardrails + 55-test battery + audits clean (217 tests) |
-| 14–15 | Testing/Audit | ⬜ |
+| 14 | Testing | ✅ E2E over real HTTP + failure/recovery battery (230 tests) |
+| 15 | Audit | ⬜ |
 
 ## Current implementation
 
@@ -128,7 +129,18 @@ and coverage gaps.
   battery in `tests/security/` (SSRF, unsafe URL, path traversal, upload
   hardening, command injection, prompt injection, malicious webpage,
   authorization, CORS/exposure, headers). Dep audits: pip-audit 0, npm audit 0.
-- **Tests**: `tests/unit/*`, `tests/integration/*`, `tests/security/*`; 217 pytest functions green
+- **Tests**: `tests/unit/*`, `tests/integration/*`, `tests/security/*`, `tests/e2e/*`,
+  `tests/failure_recovery/*`; 230 pytest functions green
+- **E2E** (`tests/e2e/`, Phase 14): real uvicorn server on loopback + real SQLite
+  DB + genuine HTTP via httpx — full investigation journey (create→run→
+  findings→graph→risk→research→approve→logs), photo journey (multipart upload,
+  real pipeline), pagination/filters, report, headers over real sockets, and a
+  server-restart test proving DB is the system of record.
+- **Failure/recovery** (`tests/failure_recovery/`, Phase 14): Ollama retry
+  (transient→recovers, persistent→clean `ModelUnavailableError`, no retry on
+  success); dispatcher down-then-up recovery at submit and via poll. Found +
+  fixed a real bug: `poll_job` compared naive (SQLite round-trip) `expires_at`
+  against UTC-aware `now` → now normalized before compare.
   + legacy (deferred) suite. Frontend: `tsc -b && vite build` and `oxlint` clean.
   Adapter tests run on fake transports (httpx.MockTransport)
   / synthetic images generated at test time — no live network, no real personal data.
