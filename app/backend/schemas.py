@@ -225,6 +225,32 @@ class ActionTransitionOut(BaseModel):
     status: str
 
 
+class LogOut(Camelised):
+    id: int
+    timestamp: datetime
+    actor: str
+    action: str
+    entityType: str = forward(("entityType", "entity_type"))
+    entityId: int | None = forward(("entityId", "entity_id"))
+    detail: str | None = None
+
+
+class SettingsOut(BaseModel):
+    """Read-only config surface — no write endpoint exists by design."""
+
+    readOnly: bool = True
+    osintEnabled: bool
+    defaultScanMode: str
+    hybridRequiresExplicitApproval: bool
+    localAiConfigured: bool
+    localAiAvailable: bool
+    colabAiConfigured: bool
+    colabAiAvailable: bool
+    colabDispatcherConfigured: bool
+    colabApprovalRequired: bool
+    uploadMaxBytes: int
+
+
 class Pagination(BaseModel):
     page: int
     pageSize: int
