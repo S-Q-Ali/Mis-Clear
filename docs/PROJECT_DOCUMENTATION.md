@@ -55,9 +55,21 @@ and coverage gaps.
   + findings for `targetType=image` scans.
 - **Frontend** (`app/frontend`): Vite + React + TypeScript scaffold (builds clean).
 - **Protocol** (`colab/protocol.py`): versioned `JobRequest`/`JobResult` dataclasses.
-- **Tests**: `tests/unit/*`, `tests/integration/*`; 71 pytest functions green
-  + legacy 16-test suite intact. Adapter tests run on fake transports / synthetic
-  images generated at test time — no live network, no real personal data.
+- **Colab worker** (`colab/`): `capabilities.py` advertises GPU/CPU/models
+  deterministically (`nvidia-smi` optional), `handlers.py` registers job types
+  (`reasoning` → Ollama; vision/OCR/barcode/embeddings degrade honestly when
+  unconfigured — never fabricated output), `worker.py` runs the master-plan §13
+  lifecycle (`execute_job`: protocol → expiry → handler → temp cleanup →
+  `data_deleted:true`; `run_worker_main` poll-proc-ack loop with reconnect),
+  `dispatch.py` covers fetch/ack transport; runnable `privacy_guardian_worker.ipynb`.
+  Laptop side: `app/backend/services/job_dispatcher.py` submits `JobRequest` to
+  `colab_job_dispatcher_url` (empty → job stays queued with an honest
+  "dispatcher not configured" error), polls results, expires late jobs as
+  `interrupted` (never auto-completed); API `POST /api/jobs/{id}/dispatch` +
+  `/poll`. End-to-end Colab transport is optional and offline-safe.
+- **Tests**: `tests/unit/*`, `tests/integration/*`; 105 pytest functions green
+  + legacy suite intact. Adapter tests run on fake transports (httpx.MockTransport)
+  / synthetic images generated at test time — no live network, no real personal data.
 
 ## Architecture (landscape)
 
@@ -75,7 +87,8 @@ Colab = disposable GPU worker (vision/OCR/embedding), never system of record.
 - Frontend: react, typescript, vite (generated scaffold; Tailwind + UI primitives in Phase 12).
 - AI: Ollama (Qwen-family local reasoning; Gemma/Qwen-VL vision), models configurable. Heavy vision/OCR → approved Colab worker (Phase 8).
 - OSINT (Phase 6): holehe, sherlock, maigret, WHOIS/DNS, public search — behind stable adapters.
-- Image (Phase 7): Pillow (EXIF/dhash), OpenCV headless (QR), stdlib hashlib; OCR/local vision deferred to Colab worker.
+- Image (Phase 7): Pillow (EXIF/dhash), OpenCV headless (QR), stdlib hashlib; OCR/local vision dispatched to Colab worker.
+- Colab transport (Phase 8): httpx (job submit/poll), `colab/*` worker package + notebook.
 
 ## Security posture (summary)
 

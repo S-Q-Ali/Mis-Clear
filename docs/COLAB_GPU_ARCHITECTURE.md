@@ -49,6 +49,10 @@ and `JobResult` (status, started/completed_at, result, errors, data_deleted).
 - `expires_at` bounds job lifetime.
 
 ## Implementation
-Phase 8: notebook `privacy_guardian_worker.ipynb`, `worker.py` lifecycle, GPU
-detection, model loading, timeout, retry/reconnect, cleanup. Test with synthetic
-data first (never real personal data).
+Phase 8 complete: notebook `privacy_guardian_worker.ipynb`, `worker.py` lifecycle
+(execute_job + run_worker_main loop), `capabilities.py` GPU probe,
+`handlers.py` registry, `dispatch.py` transport, and laptop-side
+`app/backend/services/job_dispatcher.py` (+ `POST /api/jobs/{id}/dispatch|poll`).
+End-to-end Colab transport pending Phase 9 wiring (photo vision/OCR/barcode) —
+everything degrades honestly (`blocked`/`interrupted`/`failed`) with Colab absent.
+Tested with synthetic data only (never real personal data).

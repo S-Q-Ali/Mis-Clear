@@ -4,15 +4,12 @@ from __future__ import annotations
 
 import json
 
-import pytest
-
 from colab.capabilities import (
     CapabilityReport,
     detect_capabilities,
     load_capabilities_from_json,
     probe_nvidia_smi,
 )
-
 
 # ---------- nvidia-smi probe ----------
 
@@ -26,7 +23,7 @@ def test_probe_nvidia_smi_parses_csv(tmp_path, monkeypatch):
     fake.write_text("", encoding="utf-8")
     monkeypatch.setattr("shutil.which", lambda _cmd: str(fake))
 
-    def fake_run(argv, **kwargs):  # noqa: ARG001
+    def fake_run(argv, **kwargs):
         class R:
             returncode = 0
             stdout = "T4 GPU, 16384 MiB\nGTX 1660, 6144 MiB\n"
@@ -44,7 +41,7 @@ def test_probe_nvidia_smi_parses_csv(tmp_path, monkeypatch):
 def test_probe_nvidia_smi_nonzero_return(tmp_path, monkeypatch):
     monkeypatch.setattr("shutil.which", lambda _cmd: "fake-smi")
 
-    def fake_run(argv, **kwargs):  # noqa: ARG001
+    def fake_run(argv, **kwargs):
         class R:
             returncode = 1
             stdout = ""

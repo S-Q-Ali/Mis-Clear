@@ -7,7 +7,6 @@ import pytest
 
 from colab.capabilities import CapabilityReport
 from colab.handlers import (
-    _REGISTRY,
     _ollama_generate,
     get_handler,
     register_handler,
@@ -15,7 +14,7 @@ from colab.handlers import (
 
 
 def test_registry_register_and_get():
-    def fake(payload, caps):  # noqa: ARG001
+    def fake(payload, caps):
         return {"ok": True}
 
     register_handler("zz_test", fake)
@@ -62,7 +61,7 @@ def test_ollama_generate_succeeds_with_mock_transport():
 
 
 def test_ollama_generate_http_error_returns_none():
-    def handler(request: httpx.Request) -> httpx.Response:  # noqa: ARG001
+    def handler(request: httpx.Request) -> httpx.Response:
         raise httpx.ConnectError("down")
 
     client = httpx.Client(transport=httpx.MockTransport(handler))

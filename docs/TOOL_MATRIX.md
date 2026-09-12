@@ -21,11 +21,12 @@ run(target) -> ToolResult
 | ImageMagick | image transform | not required (Pillow) | – |
 | OpenCV | image ops (QR decode) | `tools/photo/qr.py` (opencv-headless) | ✅ Phase 7 |
 | Pillow | image load/EXIF/dhash | `tools/photo/base.py` | ✅ Phase 7 |
-| Tesseract | OCR | deferred to Colab vision worker | ⬜ (Phase 8) |
+| Tesseract | OCR | exported as `ocr` job → Colab worker (vision transport wiring ⬜ Phase 9) | ⬜ |
 | pHash | perceptual hashing | `tools/photo/phash.py` (d-hash) | ✅ Phase 7 |
 | Ollama Qwen | local reasoning | `app/backend/services/model_router.py` | ✅ router code (backend optional) |
 | Ollama Qwen-VL/Gemma | local vision | same | ✅ router code (backend optional) |
-| Colab T4 | heavy vision/OCR/embeddings | `colab/` | planned (Phase 8) |
+| Colab worker | heavy vision/OCR/embeddings | `colab/` (capabilities, handlers, worker lifecycle, notebook); dispatch bind via `app/backend/services/job_dispatcher.py` | ✅ Phase 8 |
+| Laptop dispatcher | job submit/poll | `app/backend/services/job_dispatcher.py` + `POST /api/jobs/{id}/dispatch|poll` | ✅ Phase 8 |
 
 ## Policy
 - Prefer local-first; every external call must be optional + approved where it

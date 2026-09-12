@@ -78,7 +78,10 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
   `phash.py`, `exif.py`, `qr.py`, `registry.py`); `vision.py` routes vision/OCR
   to the approved Colab worker (Phase 8) with graceful `blocked` degradation.
 - `app/frontend` — Vite React-TS scaffold, dev server on 5173.
-- `colab/protocol.py` — job protocol types.
+- `colab/` — worker package: `protocol.py` (versioned JobRequest/JobResult),
+  `capabilities.py` (GPU/CPU/model probe), `handlers.py` (job-type registry +
+  honest AI handlers), `dispatch.py` (fetch/ack transport), `worker.py`
+  (execute_job lifecycle + run_worker_main loop), `privacy_guardian_worker.ipynb`.
 
 ## Module ownership map
 
@@ -93,4 +96,5 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
 | Models | `app/backend/models.py` | 4 ✅ |
 | DB engine + migrations | `app/backend/database/*` | 4 ✅ |
 | Security | `app/backend/security/*` | 13 |
-| Colab worker | `colab/*` | 8 |
+| Colab worker | `colab/*` | 8 ✅ |
+| Job dispatch | `app/backend/services/job_dispatcher.py` | 8 ✅ |
