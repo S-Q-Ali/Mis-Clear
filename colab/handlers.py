@@ -10,7 +10,8 @@ Built-in job types: `reasoning` (Ollama), `vision_analysis`, `ocr`, `barcode`,
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import httpx
 

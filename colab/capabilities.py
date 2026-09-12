@@ -23,7 +23,7 @@ class CapabilityReport:
     gpus: list[str] = field(default_factory=list)
     cpu: bool = True
     gpu_count: int = 0
-    vidMemory: int = 0  # noqa: N815 - JSON-facing field
+    vidMemory: int = 0
     models: list[str] = field(default_factory=list)
 
     def advertise(self) -> dict[str, Any]:
@@ -48,6 +48,7 @@ def probe_nvidia_smi(path: str = "nvidia-smi") -> dict[str, Any] | None:
             capture_output=True,
             text=True,
             timeout=5,
+            check=False,
         )
         if proc.returncode != 0:
             return None
