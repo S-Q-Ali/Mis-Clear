@@ -1,121 +1,108 @@
 import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import Actions from './views/Actions'
+import Dashboard from './views/Dashboard'
+import Logs from './views/Logs'
+import Scans from './views/Scans'
+import Settings from './views/Settings'
+import ScanDetail, { type DetailTab } from './views/ScanDetail'
+import Workers from './views/Workers'
 import './App.css'
 
+type View = 'dashboard' | 'scans' | 'overview' | 'findings' | 'graph' | 'photo' | 'actions' | 'logs' | 'workers' | 'settings'
+
+const NAV: { key: View; label: string; needsScan?: boolean }[] = [
+  { key: 'dashboard', label: 'Dashboard' },
+  { key: 'scans', label: 'Scans' },
+  { key: 'overview', label: 'Live investigation', needsScan: true },
+  { key: 'findings', label: 'Findings & evidence', needsScan: true },
+  { key: 'graph', label: 'Identity graph', needsScan: true },
+  { key: 'photo', label: 'Photo analysis', needsScan: true },
+  { key: 'actions', label: 'Privacy actions' },
+  { key: 'workers', label: 'Worker status' },
+  { key: 'settings', label: 'Settings' },
+  { key: 'logs', label: 'Logs' },
+]
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [view, setView] = useState<View>('dashboard')
+  const [scanId, setScanId] = useState<number | null>(null)
+
+  const openScan = (id: number) => {
+    setScanId(id)
+    setView('overview')
+  }
+
+  const openFromSidebar = (v: View) => {
+    if (v === 'overview' || v === 'findings' || v === 'graph' || v === 'photo') {
+      if (scanId === null) {
+        setView('scans')
+        return
+      }
+    }
+    setView(v)
+  }
+
+  const scanNeededCard = (
+    <div className="page">
+      <h2>Select a scan first</h2>
+      <p className="muted">This view shows details for one investigation. Pick a scan from the Scans page.</p>
+      <button className="btn" onClick={() => setView('scans')}>Go to Scans</button>
+    </div>
+  )
+
+  const tabFor = (v: View): DetailTab =>
+    v === 'findings' ? 'findings' : v === 'graph' ? 'graph' : v === 'photo' ? 'photo' : 'overview'
+
+  const onDetailTab = (t: DetailTab) =>
+    setView(t === 'findings' ? 'findings' : t === 'graph' ? 'graph' : t === 'photo' ? 'photo' : 'overview')
+
+  const scanDetailView = (v: View) => {
+    if (scanId === null) return scanNeededCard
+    return (
+      <ScanDetail
+        scanId={scanId}
+        tab={tabFor(v)}
+        onBack={() => setView('scans')}
+        onTabChange={onDetailTab}
+      />
+    )
+  }
+
+  const isScanScoped = view === 'overview' || view === 'findings' || view === 'graph' || view === 'photo'
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="app">
+      <aside className="sidebar">
+        <div className="brand">
+          <span className="brand-mark">PG</span>
+          <div>
+            <div className="brand-name">Privacy Guardian</div>
+            <div className="brand-sub">local-first OSINT assistant</div>
+          </div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <nav>
+          {NAV.map((item) => (
+            <button
+              key={item.key}
+              className={`nav-item ${view === item.key ? 'nav-active' : ''}`}
+              onClick={() => openFromSidebar(item.key)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-foot">laptop is the system of record</div>
+      </aside>
+      <main className="content">
+        {view === 'dashboard' && <Dashboard onViewScan={openScan} />}
+        {view === 'scans' && <Scans onOpen={openScan} />}
+        {isScanScoped && scanDetailView(view)}
+        {view === 'actions' && <Actions />}
+        {view === 'workers' && <Workers />}
+        {view === 'settings' && <Settings />}
+        {view === 'logs' && <Logs />}
+      </main>
+    </div>
   )
 }
 
