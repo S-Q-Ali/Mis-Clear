@@ -38,7 +38,10 @@ export default function Dashboard({ onViewScan }: Props) {
         </div>
         <div className="card">
           <span className="card-label">Colab</span>
-          <Badge status={worker?.colabAiAvailable ? 'completed' : 'weak'} label={worker?.colabAiAvailable ? 'available' : worker?.colabAiConfigured ? 'offline' : 'not configured'} />
+          <Badge
+            status={worker?.colabDispatcherConfigured ? 'completed' : 'weak'}
+            label={worker?.colabDispatcherConfigured ? 'configured' : 'not configured'}
+          />
         </div>
       </div>
       <h3>Recent scans</h3>
