@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     # Ollama served on a Colab/site tunnel (optional AI worker), e.g. https://xxx.loca.lt
     colab_ollama_url: str = ""
     colab_approval_required: bool = True
+    colab_request_timeout_seconds: int = 15
 
     default_scan_mode: str = "local"
     hybrid_requires_explicit_approval: bool = True

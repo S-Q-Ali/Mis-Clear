@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -20,6 +18,7 @@ from app.backend.schemas import (
     Paginated,
     pagination_meta,
 )
+from app.backend.services import job_dispatcher
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
@@ -83,3 +82,29 @@ def get_job(job_id: int, db: Session = Depends(get_db)) -> JobOut:
     if job is None:
         raise api_error(404, "NOT_FOUND", f"Job {job_id} not found")
     return JobOut.model_validate(job)
+
+
+@router.post("/{job_id}/dispatch")
+def dispatch_job(job_id: int, db: Session = Depends(get_db)) -> JobOut:
+    job = db.get(m.Job, job_id)
+    if job is None:
+        raise api_error(404, "NOT_FOUND", f"Job {job_id} not found")
+    if job.status == "running":
+        raise api_error(409, "JOB_RUNNING", "Job is already dispatched")
+    outcome = job_dispatcher.submit_job(db, job)
+    db.add(m.AuditLog(actor="user", action="run", entity_type="job", entity_id=job.id,
+                      detail=f"dispatch:{outcome['disposition']}"))
+    db.commit()
+    return JobOut.model_validate(db.get(m.Job, job_id))
+
+
+@router.post("/{job_id}/poll")
+def poll_job(job_id: int, db: Session = Depends(get_db)) -> JobOut:
+    job = db.get(m.Job, job_id)
+    if job is None:
+        raise api_error(404, "NOT_FOUND", f"Job {job_id} not found")
+    outcome = job_dispatcher.poll_job(db, job)
+    db.add(m.AuditLog(actor="user", action="update", entity_type="job", entity_id=job.id,
+                      detail=f"poll:{outcome['disposition']}"))
+    db.commit()
+    return JobOut.model_validate(db.get(m.Job, job_id))

@@ -2,16 +2,17 @@
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from app.backend import models as m
 
 
 @pytest.fixture()
 def client(tmp_path, monkeypatch):
+    import app.backend.api.workers as wk
     import app.backend.config as cfg
     import app.backend.database.engine as eng
-    import app.backend.api.workers as wk
+    import app.backend.services.job_dispatcher as jd
 
     test_settings = cfg.Settings(
         database_path=str(tmp_path / "api.db"), ollama_url="", colab_ollama_url=""
@@ -19,6 +20,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(cfg, "settings", test_settings)
     monkeypatch.setattr(eng, "settings", test_settings)
     monkeypatch.setattr(wk, "settings", test_settings)
+    monkeypatch.setattr(jd, "settings", test_settings)
 
     eng.engine = eng.build_engine(test_settings.database_path)
     eng.SessionLocal = sessionmaker(bind=eng.engine, autoflush=False, autocommit=False)
@@ -108,6 +110,44 @@ def test_job_create_get(client):
 
     g = client.get("/api/jobs")
     assert g.status_code == 200 and g.json()["pagination"]["totalItems"] == 1
+
+
+def test_job_dispatch_unconfigured_stays_queued(client):
+    r = client.post("/api/jobs", json={
+        "jobId": "bbbbbbbb-bbbb-cccc-dddd-eeeeeeeeeeee", "jobType": "vision_analysis",
+        "payload": {"n": 1}})
+    assert r.status_code == 201
+    job_id = r.json()["id"]
+    d = client.post(f"/api/jobs/{job_id}/dispatch")
+    assert d.status_code == 200
+    assert d.json()["status"] == "queued"
+    assert "colab dispatcher not configured" in d.json()["errors"]
+
+
+def test_job_dispatch_running_conflict(client):
+    r = client.post("/api/jobs", json={
+        "jobId": "cccccccc-bbbb-cccc-dddd-eeeeeeeeeeee", "jobType": "reasoning",
+        "payload": {"q": "hello"}})
+    job_id = r.json()["id"]
+    with db_session() as db:
+        job = db.get(m.Job, job_id)
+        job.status = "running"
+        db.commit()
+    d = client.post(f"/api/jobs/{job_id}/dispatch")
+    assert d.status_code == 409
+    assert d.json()["error"]["code"] == "JOB_RUNNING"
+
+
+def test_job_poll_unconfigured_and_404(client):
+    r = client.post("/api/jobs", json={
+        "jobId": "dddddddd-bbbb-cccc-dddd-eeeeeeeeeeee", "jobType": "reasoning",
+        "payload": {"q": "hi"}})
+    job_id = r.json()["id"]
+    p = client.post(f"/api/jobs/{job_id}/poll")
+    assert p.status_code == 200
+    assert "colab dispatcher not configured" in p.json()["errors"]
+    missing = client.post("/api/jobs/99999/poll")
+    assert missing.status_code == 404
 
 
 def test_worker_status_honest(client):
