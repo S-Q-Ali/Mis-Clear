@@ -167,6 +167,39 @@ class ReportSummary(BaseModel):
     aiAvailable: bool
 
 
+class RiskBreakdownOut(BaseModel):
+    severity: float
+    confidence: float
+    sourceReliability: float
+    sensitivity: float
+    exposureAge: float
+    correlation: float
+    score: float
+    riskScore: int
+    level: str
+    gated: bool = False
+    extra: dict[str, Any] = {}
+
+
+class FindingRiskOut(BaseModel):
+    findingId: int
+    type: str
+    title: str
+    score: float
+    riskScore: int
+    level: str
+    breakdown: RiskBreakdownOut
+
+
+class ScanRiskOut(BaseModel):
+    scanId: int
+    riskScore: int
+    level: str
+    averageRiskScore: int
+    findingCount: int
+    findings: list[FindingRiskOut]
+
+
 class Pagination(BaseModel):
     page: int
     pageSize: int
