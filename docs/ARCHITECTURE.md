@@ -93,6 +93,13 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
   labels, URL tokens from evidence), `rebuild_scan_graph`, and cross-scan
   `graph_for_scan` (collapses identities by `(kind, canonical)`). Exposed via
   `GET /api/scans/{id}/graph` + `POST /api/scans/{id}/graph/rebuild`.
+- `app/backend/security/` — Phase 13 guardrails: `url_safety.py` (SSRF/unsafe-URL
+  validation fed by OSINT targets + sitecheck manifest probe URLs),
+  `middleware.py` (security response headers). Evidence caps + upload
+  decompression-bomb guard live in `tools/base.py` and `app/backend/api/scans.py`.
+- `tests/security/` — 55 tests (SSRF, unsafe URL, path traversal, upload
+  hardening, command injection, prompt injection, malicious webpage,
+  authorization, CORS/exposure, security headers).
 
 ## Module ownership map
 
@@ -106,7 +113,7 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
 | Photo forensics | `tools/photo/*` | 7 ✅ |
 | Models | `app/backend/models.py` | 4 ✅ |
 | DB engine + migrations | `app/backend/database/*` | 4 ✅ |
-| Security | `app/backend/security/*` | 13 |
+| Security | `app/backend/security/*` | 13 ✅ |
 | Colab worker | `colab/*` | 8 ✅ |
 | Job dispatch | `app/backend/services/job_dispatcher.py` | 8 ✅ |
 | Identity graph | `app/backend/services/identity_graph.py` | 9 ✅ |

@@ -30,7 +30,8 @@ and coverage gaps.
 | 10 | Risk engine | ✅ deterministic, reproducible 0–100 scoring + risk API (143 tests) |
 | 11 | Deletion research | ✅ official org/procedure + DRAFT requests + human approve/decline (160 tests) |
 | 12 | Frontend UI | ✅ React UI over the control plane (build/lint clean, 162 tests) |
-| 13–15 | Security/Testing/Audit | ⬜ |
+| 13 | Security | ✅ guardrails + 55-test battery + audits clean (217 tests) |
+| 14–15 | Testing/Audit | ⬜ |
 
 ## Current implementation
 
@@ -117,7 +118,17 @@ and coverage gaps.
   only marks a human-executed step. API
   `POST /api/scans/{id}/deletion-research`, `GET /api/actions[?scanId&status]`,
   `GET /api/actions/{id}`, `POST /api/actions/{id}/approve`|`/decline`.
-- **Tests**: `tests/unit/*`, `tests/integration/*`; 162 pytest functions green
+- **Security** (`app/backend/security/`, Phase 13): `url_safety.py` — SSRF/
+  unsafe-URL guardrail (https-only, no userinfo, private/loopback/reserved IP
+  literals + private hostname families rejected; manifest probe-URL authority
+  check + host-consistency after `{target}` interpolation); `middleware.py` —
+  security response headers (nosniff/DENY/no-referrer/CSP `default-src 'none'`,
+  `no-store` on `/api`). Central evidence cap (2000 chars) in `tools/base.py`;
+  upload decompression-bomb guard (`width*height` ≤ 50 MP). 55-test security
+  battery in `tests/security/` (SSRF, unsafe URL, path traversal, upload
+  hardening, command injection, prompt injection, malicious webpage,
+  authorization, CORS/exposure, headers). Dep audits: pip-audit 0, npm audit 0.
+- **Tests**: `tests/unit/*`, `tests/integration/*`, `tests/security/*`; 217 pytest functions green
   + legacy (deferred) suite. Frontend: `tsc -b && vite build` and `oxlint` clean.
   Adapter tests run on fake transports (httpx.MockTransport)
   / synthetic images generated at test time — no live network, no real personal data.
