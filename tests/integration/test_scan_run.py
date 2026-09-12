@@ -82,8 +82,8 @@ def test_orchestrator_persists_results_and_coverage(tmp_path):
     assert findings[0].confidence == "probable" and findings[0].tool == "fakemail"
 
     identities = session.execute(select(m.Identity).where(m.Identity.scan_id == scan.id)).scalars().all()
-    assert len(identities) == 1
-    assert identities[0].kind == "email" and identities[0].value == "alice@example.com"
+    assert len(identities) >= 1  # target + Phase 9 graph-derived identities
+    assert any(i.kind == "email" and i.value == "alice@example.com" for i in identities)
 
 
 def test_orchestrator_tool_filter_and_crash_isolation(tmp_path):

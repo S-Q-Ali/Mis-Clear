@@ -123,6 +123,19 @@ def test_graph_rebuild_idempotent_and_cross_scan_merge(client, monkeypatch):
     assert user_nodes[0]["scanCount"] >= 2  # merged across the two scans
 
 
+def test_graph_auto_linked_after_run(client, monkeypatch):
+    import tools.registry as treg
+
+    monkeypatch.setattr(treg, "build_registry",
+                        lambda **kwargs: [FakeUsernameAdapter(), FakeSearchAdapter()])
+    r = client.post("/api/scans", json={"targetType": "username", "targetValue": "carol"})
+    scan_id = r.json()["id"]
+    assert client.post(f"/api/scans/{scan_id}/run").status_code == 200
+    body = client.get(f"/api/scans/{scan_id}/graph").json()
+    assert any(n["kind"] == "profile" for n in body["nodes"])
+    assert any(e["type"] == "username_profile" for e in body["edges"])
+
+
 def test_graph_empty_and_404(client):
     r = client.post("/api/scans", json={"targetType": "email", "targetValue": "zoe@example.com"})
     scan_id = r.json()["id"]

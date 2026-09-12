@@ -179,5 +179,17 @@ def run_scan(
     if aggregate["sources_checked"] == 0 and aggregate["findings"] == 0:
         scan.error = "no data found (network disabled or nothing found)"
     db.commit()
+
+    # Phase 9: build identity-graph edges (derived data, best-effort — never
+    # blocks a scan result on graph wiring).
+    try:
+        from app.backend.services.identity_graph import link_scan
+
+        link_scan(db, scan)
+        db.commit()
+    except Exception:  # noqa: BLE001 - graph is derived data; scan result is authoritative
+        db.rollback()
+        db.commit()
+
     db.refresh(scan)
     return scan
