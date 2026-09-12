@@ -63,8 +63,9 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
 - `app/backend/schemas.py` — contract-first Pydantic IO (camelCase JSON, snake_case ORM via
   alias mapping; `Paginated[T]` + `pagination_meta`, pageSize ≤ 100).
 - `app/backend/errors.py` — single error envelope + handlers.
-- `app/backend/api/{health,scans,findings,jobs,workers,reports}.py` — REST control plane
-  (handlers: scans CRUD/findings/tool-runs, jobs CRUD, workers status/probe, reports aggregation).
+- `app/backend/api/{health,scans,findings,jobs,workers,reports,logs,settings}.py` —
+  REST control plane (handlers: scans CRUD/findings/tool-runs, jobs CRUD, workers
+  status/probe, reports aggregation, audit-log read, read-only settings).
 - `app/backend/services/{model_router,idempotency}.py` — AI routing; idempotency keys
   (`idempotency_keys` table: atomic claim, replay/mismatch/in-flight resolution).
 - `app/backend/models.py` + `database/migrations.py` — 9 tables + versioned migrations (v3).
@@ -77,7 +78,12 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
 - `tools/photo/` — local-first photo pipeline (`base.py` helpers, `hash.py`,
   `phash.py`, `exif.py`, `qr.py`, `registry.py`); `vision.py` routes vision/OCR
   to the approved Colab worker (Phase 8) with graceful `blocked` degradation.
-- `app/frontend` — Vite React-TS scaffold, dev server on 5173.
+- `app/frontend` — React 19 + TypeScript SPA (Phase 12): hash-free state-based
+  sidebar nav; typed `fetch('/api/*')` client (`src/api.ts`) via Vite dev proxy
+  → `127.0.0.1:8000`; views in `src/views/*` (Dashboard, Scans, ScanDetail with
+  polling + evidence/graph(SVG)/photo/risk tabs, Actions, Logs, Workers,
+  Settings read-only); dark theme `App.css`. No router/UI/plot libraries.
+  `tsc -b && vite build` clean, oxlint clean.
 - `colab/` — worker package: `protocol.py` (versioned JobRequest/JobResult),
   `capabilities.py` (GPU/CPU/model probe), `handlers.py` (job-type registry +
   honest AI handlers), `dispatch.py` (fetch/ack transport), `worker.py`
@@ -106,3 +112,5 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
 | Identity graph | `app/backend/services/identity_graph.py` | 9 ✅ |
 | Risk engine | `app/backend/services/risk_engine.py` | 10 ✅ |
 | Deletion research | `app/backend/services/deletion_research.py` | 11 ✅ |
+| Frontend UI | `app/frontend/src/*` | 12 ✅ |
+| UI support API | `app/backend/api/{logs,settings}.py` | 12 ✅ |

@@ -29,7 +29,8 @@ and coverage gaps.
 | 9 | Identity graph | ✅ deterministic link rules + cross-scan merge + graph API (121 tests) |
 | 10 | Risk engine | ✅ deterministic, reproducible 0–100 scoring + risk API (143 tests) |
 | 11 | Deletion research | ✅ official org/procedure + DRAFT requests + human approve/decline (160 tests) |
-| 12–15 | UI/Security/Testing/Audit | ⬜ |
+| 12 | Frontend UI | ✅ React UI over the control plane (build/lint clean, 162 tests) |
+| 13–15 | Security/Testing/Audit | ⬜ |
 
 ## Current implementation
 
@@ -59,7 +60,20 @@ and coverage gaps.
   /api/scans/{id}/image` uploads (validated magic bytes + size cap) to
   `data/uploads`, then the orchestrator persists an `Image` row (hashes/pHash)
   + findings for `targetType=image` scans.
-- **Frontend** (`app/frontend`): Vite + React + TypeScript scaffold (builds clean).
+- **Frontend** (`app/frontend`, Phase 12): React 19 + TypeScript SPA (Vite).
+  Hash-free state-based sidebar navigation; typed API client (`src/api.ts`,
+  `fetch('/api/*')` via Vite dev proxy → `127.0.0.1:8000`, FormData uploads);
+  views: Dashboard (aggregate stats + worker status), Scans (create/list/run),
+  Scan Detail (live polling while `running`; tabs for evidence findings, identity
+  graph as a deterministic circular SVG with no layout library, photo analysis
+  + upload, risk, deletion research), Actions (approve/decline privacy actions),
+  Logs (audit trail, newest-first + filters), Workers, Settings (read-only,
+  backed by `GET /api/settings`). Dark theme in `App.css`; oxlint clean
+  (`react/only-export-components` kept at warn; compiler-only `set-state-in-effect`
+  disabled for fetch-on-mount). No icon/router/UI libraries; no new npm deps.
+- **UI support API** (Phase 12): `GET /api/logs` (audit log, newest-first,
+  `entityType`/`actor` filters, paginated, `LogOut`) and read-only
+  `GET /api/settings` (`SettingsOut`; POST/PUT → 405).
 - **Protocol** (`colab/protocol.py`): versioned `JobRequest`/`JobResult` dataclasses.
 - **Colab worker** (`colab/`): `capabilities.py` advertises GPU/CPU/models
   deterministically (`nvidia-smi` optional), `handlers.py` registers job types
@@ -103,8 +117,9 @@ and coverage gaps.
   only marks a human-executed step. API
   `POST /api/scans/{id}/deletion-research`, `GET /api/actions[?scanId&status]`,
   `GET /api/actions/{id}`, `POST /api/actions/{id}/approve`|`/decline`.
-- **Tests**: `tests/unit/*`, `tests/integration/*`; 160 pytest functions green
-  + legacy (deferred) suite. Adapter tests run on fake transports (httpx.MockTransport)
+- **Tests**: `tests/unit/*`, `tests/integration/*`; 162 pytest functions green
+  + legacy (deferred) suite. Frontend: `tsc -b && vite build` and `oxlint` clean.
+  Adapter tests run on fake transports (httpx.MockTransport)
   / synthetic images generated at test time — no live network, no real personal data.
 
 ## Architecture (landscape)
@@ -114,13 +129,14 @@ LAPTOP ── React+TS UI → FastAPI control plane → scan orchestrator
    → local agents/tools (email/username/web/photo/risk)
    → SQLite + evidence store → identity graph (deterministic relationships)
    → optional Colab job dispatcher (explicit approval only)
+   ↔ UI support: /api/logs (audit trail) + /api/settings (read-only)
 Colab = disposable GPU worker (vision/OCR/embedding), never system of record.
 ```
 
 ## Dependencies
 
 - Backend: fastapi, uvicorn, pydantic, pydantic-settings, sqlalchemy, httpx, pillow, opencv-python-headless, python-multipart (managed via `uv`, `pyproject.toml`).
-- Frontend: react, typescript, vite (generated scaffold; Tailwind + UI primitives in Phase 12).
+- Frontend: react, typescript, vite (Phase 12: real SPA; no extra runtime deps; oxlint for linting).
 - AI: Ollama (Qwen-family local reasoning; Gemma/Qwen-VL vision), models configurable. Heavy vision/OCR → approved Colab worker (Phase 8).
 - OSINT (Phase 6): holehe, sherlock, maigret, WHOIS/DNS, public search — behind stable adapters.
 - Image (Phase 7): Pillow (EXIF/dhash), OpenCV headless (QR), stdlib hashlib; OCR/local vision dispatched to Colab worker.
