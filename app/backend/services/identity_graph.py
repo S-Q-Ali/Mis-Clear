@@ -197,11 +197,12 @@ def graph_for_scan(db: Session, scan_id: int, *, max_hops: int = 6) -> dict[str,
 
     key_of: dict[int, tuple[str, str]] = {}
     all_identities: dict[tuple[str, str], m.Identity] = {}
+    identity_rows_by_key: dict[tuple[str, str], list[m.Identity]] = {}
     for row in db.execute(select(m.Identity)).scalars().all():
         key = (row.kind, row.canonical)
         key_of[row.id] = key
-        selected = all_identities.get(key)
-        if selected is None:
+        identity_rows_by_key.setdefault(key, []).append(row)
+        if key not in all_identities:
             all_identities[key] = row
 
     frontier = set()
@@ -233,10 +234,6 @@ def graph_for_scan(db: Session, scan_id: int, *, max_hops: int = 6) -> dict[str,
     nodes: list[dict[str, Any]] = []
     evidence_by_node: dict[tuple[str, str], int] = {}
     evidence_scans: dict[tuple[str, str], set[int]] = {}
-    identity_rows_by_key: dict[tuple[str, str], list[m.Identity]] = {}
-    for row in all_identities.values():
-        identity_rows_by_key.setdefault((row.kind, row.canonical), []).append(row)
-
     for sk, tk, _rel_type, ef in edges_by_key:
         if ef is not None:
             evidence_by_node[sk] = evidence_by_node.get(sk, 0) + 1
