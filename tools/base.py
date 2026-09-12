@@ -21,6 +21,11 @@ from typing import Any
 VALID_CONFIDENCE = {"confirmed", "probable", "possible", "weak", "false_positive"}
 VALID_SEVERITY = {"critical", "high", "medium", "low", "informational"}
 
+# Central cap for evidence text coming from untrusted web/model content.
+# Keeps the evidence store bounded even if a remote source returns a megabyte
+# of payload (defense-in-depth; per-adapter caps already exist at lower sizes).
+EVIDENCE_MAX_CHARS = 2000
+
 
 @dataclass
 class ToolFinding:
@@ -40,6 +45,8 @@ class ToolFinding:
             raise ValueError(f"invalid confidence: {self.confidence}")
         if self.severity not in VALID_SEVERITY:
             raise ValueError(f"invalid severity: {self.severity}")
+        if self.evidence is not None and len(self.evidence) > EVIDENCE_MAX_CHARS:
+            self.evidence = self.evidence[:EVIDENCE_MAX_CHARS]
 
 
 @dataclass

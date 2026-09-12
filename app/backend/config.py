@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     # Photo forensics (Phase 7)
     upload_dir: str = "data/uploads"
     upload_max_bytes: int = 20 * 1024 * 1024  # 20 MB
+    # Decompression-bomb guard (Phase 13): declared pixel count ceiling.
+    upload_max_pixels: int = 50_000_000  # 50 MP
 
     @property
     def cors_origin_list(self) -> list[str]:

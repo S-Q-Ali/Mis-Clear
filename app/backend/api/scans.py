@@ -83,6 +83,17 @@ async def upload_image(
     except Exception as exc:
         raise api_error(422, "INVALID_IMAGE", f"Not a valid image: {exc}") from exc
 
+    # Decompression-bomb guard: a tiny file can declare huge dimensions and only
+    # allocate on pixel load. Check the header before anything allocates pixels.
+    with PILImage.open(BytesIO(contents)) as dims:
+        width, height = dims.size
+    if width * height > settings.upload_max_pixels:
+        raise api_error(
+            422,
+            "IMAGE_TOO_LARGE",
+            f"Image dimensions {width}x{height} exceed {settings.upload_max_pixels} pixels",
+        )
+
     suffix = Path(file.filename or "").suffix.lower()[1:]
     suffix = "".join(c for c in suffix if c.isalnum())[:5] or "img"
     display_name = Path(file.filename or "image").name[:255]

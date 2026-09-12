@@ -27,6 +27,7 @@ from typing import Any
 
 import httpx
 
+from app.backend.security.url_safety import formatted_url_matches, probe_url_safe
 from tools.base import ToolAdapter, ToolFinding, ToolResult
 
 
@@ -90,7 +91,16 @@ class SiteCheckAdapter(ToolAdapter):
         sources_failed = 0
         matched_url: str | None = None
         for spec in self.sites:
+            unsafe = probe_url_safe(spec.probe_url)
+            if unsafe:
+                sources_failed += 1
+                result.errors.append(f"{spec.name}: skipped unsafe probe URL ({unsafe})")
+                continue
             url = spec.probe_url.format(target=target)
+            if not formatted_url_matches(url, spec.probe_url):
+                sources_failed += 1
+                result.errors.append(f"{spec.name}: target would leave the manifest host — skipped")
+                continue
             try:
                 if spec.method == "POST":
                     body = {"target": target}

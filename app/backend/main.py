@@ -16,6 +16,7 @@ from app.backend.api.workers import router as workers_router
 from app.backend.config import settings
 from app.backend.database.engine import init_db
 from app.backend.errors import http_exception_handler, validation_exception_handler
+from app.backend.security.middleware import SecurityHeadersMiddleware
 
 
 def create_app() -> FastAPI:
@@ -25,6 +26,7 @@ def create_app() -> FastAPI:
         description="Local-first personal privacy/OSINT assistant control plane",
     )
 
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,
