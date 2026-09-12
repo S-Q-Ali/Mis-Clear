@@ -65,7 +65,11 @@ def poll_job(db: Session, job: m.Job, *, client: httpx.Client | None = None, now
     """Fetch the worker's JobResult for one job; expire late jobs as interrupted."""
     base = dispatcher_base_url()
     now = now or datetime.now(UTC)
-    if job.expires_at and job.expires_at < now and job.status in ("queued", "running"):
+    expires = job.expires_at
+    # SQLite round-trips DateTime as naive UTC; normalize before comparing.
+    if expires is not None and expires.tzinfo is None:
+        expires = expires.replace(tzinfo=UTC)
+    if expires is not None and expires < now and job.status in ("queued", "running"):
         job.status = "interrupted"
         job.errors = job.errors or []
         job.errors.append("job expired before worker completion (never auto-completed)")
