@@ -27,13 +27,15 @@ and coverage gaps.
 | 7 | Photo forensics | ✅ local pipeline: hashes/pHash/EXIF/QR + vision router stub + upload API (71 tests) |
 | 8 | Colab worker | ✅ capability probe, handler registry, worker lifecycle, notebook, laptop dispatcher+API (105 tests) |
 | 9 | Identity graph | ✅ deterministic link rules + cross-scan merge + graph API (121 tests) |
-| 10–15 | Risk/Deletion/Frontend/Security/Testing/Audit | ⬜ |
+| 10 | Risk engine | ✅ deterministic, reproducible 0–100 scoring + risk API (143 tests) |
+| 11–15 | Deletion/UI/Security/Testing/Audit | ⬜ |
 
 ## Current implementation
 
 - **Backend** (`app/backend`): FastAPI app factory; REST control plane —
   `POST/GET /api/scans`, `/api/scans/{id}/findings`, `/api/scans/{id}/tool-runs`,
-  `/api/scans/{id}/graph` (+ `/rebuild`), `/api/jobs` (+ `/dispatch`/`/poll`),
+  `/api/scans/{id}/graph` (+ `/rebuild`), `/api/scans/{id}/risk`,
+  `/api/jobs` (+ `/dispatch`/`/poll`),
   `/api/workers`, `/api/reports/{scan_id}`; idempotent scan creation
    (`Idempotency-Key` header, dedupe + replay); consistent error envelope
    `{"error": {"code", "message", "details"}}` (422/404/409/500); contract-first
@@ -77,8 +79,18 @@ and coverage gaps.
   component (nodes: kind/value/canonical/scanCount/evidenceCount; edges with
   evidenceFindingId). Auto-linked best-effort after every scan run; API
   `GET /api/scans/{id}/graph` + `POST /api/scans/{id}/graph/rebuild`.
-- **Tests**: `tests/unit/*`, `tests/integration/*`; 121 pytest functions green
-  + legacy suite intact. Adapter tests run on fake transports (httpx.MockTransport)
+- **Risk engine** (`app/backend/services/risk_engine.py`, Phase 10): fully
+  deterministic, reproducible 0–100 scores — no AI is ever allowed to compute
+  the number. Six factors: severity, confidence, source reliability, data
+  sensitivity, exposure age, correlation (peers of same type in the scan).
+  `false_positive` is a hard gate (score 0). Partial weight overrides are
+  rescaled to sum 1. `explain_risk` gives a deterministic, factor-attributing
+  explanation (AI may only explain, never invent). API
+  `GET /api/scans/{id}/risk` returns per-finding breakdown + aggregate
+  (max + average), with scan-level correlation computed from independent
+  confirmations.
+- **Tests**: `tests/unit/*`, `tests/integration/*`; 143 pytest functions green
+  + legacy (deferred) suite. Adapter tests run on fake transports (httpx.MockTransport)
   / synthetic images generated at test time — no live network, no real personal data.
 
 ## Architecture (landscape)
