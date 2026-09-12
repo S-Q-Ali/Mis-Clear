@@ -26,7 +26,7 @@ function useScanDetail(scanId: number) {
     try {
       const [sc, fds, trs, rk] = await Promise.all([
         api.getScan(scanId),
-        api.getFindings(scanId, 1, 200).then((p) => p.data),
+        api.getFindings(scanId, 1, 100).then((p) => p.data),
         api.getToolRuns(scanId).then((p) => p.data),
         api.getRisk(scanId).catch(() => null),
       ])
