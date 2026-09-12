@@ -105,3 +105,4 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
 | Job dispatch | `app/backend/services/job_dispatcher.py` | 8 ✅ |
 | Identity graph | `app/backend/services/identity_graph.py` | 9 ✅ |
 | Risk engine | `app/backend/services/risk_engine.py` | 10 ✅ |
+| Deletion research | `app/backend/services/deletion_research.py` | 11 ✅ |

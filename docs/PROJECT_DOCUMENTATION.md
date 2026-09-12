@@ -28,13 +28,15 @@ and coverage gaps.
 | 8 | Colab worker | ✅ capability probe, handler registry, worker lifecycle, notebook, laptop dispatcher+API (105 tests) |
 | 9 | Identity graph | ✅ deterministic link rules + cross-scan merge + graph API (121 tests) |
 | 10 | Risk engine | ✅ deterministic, reproducible 0–100 scoring + risk API (143 tests) |
-| 11–15 | Deletion/UI/Security/Testing/Audit | ⬜ |
+| 11 | Deletion research | ✅ official org/procedure + DRAFT requests + human approve/decline (160 tests) |
+| 12–15 | UI/Security/Testing/Audit | ⬜ |
 
 ## Current implementation
 
 - **Backend** (`app/backend`): FastAPI app factory; REST control plane —
   `POST/GET /api/scans`, `/api/scans/{id}/findings`, `/api/scans/{id}/tool-runs`,
   `/api/scans/{id}/graph` (+ `/rebuild`), `/api/scans/{id}/risk`,
+  `/api/scans/{id}/deletion-research`, `/api/actions` (+ `/approve`/`/decline`),
   `/api/jobs` (+ `/dispatch`/`/poll`),
   `/api/workers`, `/api/reports/{scan_id}`; idempotent scan creation
    (`Idempotency-Key` header, dedupe + replay); consistent error envelope
@@ -89,7 +91,19 @@ and coverage gaps.
   `GET /api/scans/{id}/risk` returns per-finding breakdown + aggregate
   (max + average), with scan-level correlation computed from independent
   confirmations.
-- **Tests**: `tests/unit/*`, `tests/integration/*`; 143 pytest functions green
+- **Deletion research** (`app/backend/services/deletion_research.py`, Phase 11):
+  for every confirmed/probable, meaningful-severity, URL-bearing open finding,
+  produces a `PrivacyAction` (existing Phase 4 table, no migration): official
+  organization, official procedure URL (curated registry of real, stable
+  links), step-by-step instructions, and a deterministic DRAFT removal-request
+  text explicitly marked "do not send automatically". Unknown domains take an
+  honest `known=False` path (org label = hostname, no invented URL/steps).
+  Actions start `pending` with `approvalRequired=True`; humans approve/decline
+  via the API (audit-logged). **Nothing is ever sent by this module** — approval
+  only marks a human-executed step. API
+  `POST /api/scans/{id}/deletion-research`, `GET /api/actions[?scanId&status]`,
+  `GET /api/actions/{id}`, `POST /api/actions/{id}/approve`|`/decline`.
+- **Tests**: `tests/unit/*`, `tests/integration/*`; 160 pytest functions green
   + legacy (deferred) suite. Adapter tests run on fake transports (httpx.MockTransport)
   / synthetic images generated at test time — no live network, no real personal data.
 
