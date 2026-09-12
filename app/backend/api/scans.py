@@ -28,10 +28,11 @@ from app.backend.schemas import (
     Paginated,
     ScanCreate,
     ScanOut,
+    ScanRiskOut,
     ToolRunOut,
     pagination_meta,
 )
-from app.backend.services import idempotency, identity_graph
+from app.backend.services import idempotency, identity_graph, risk_engine
 from app.backend.services.scan_orchestrator import run_scan
 
 router = APIRouter(prefix="/api/scans", tags=["scans"])
@@ -230,3 +231,12 @@ def rebuild_scan_graph(scan_id: int, db: Session = Depends(get_db)) -> GraphOut:
     db.commit()
     data = identity_graph.graph_for_scan(db, scan_id)
     return GraphOut(**data)
+
+
+@router.get("/{scan_id}/risk")
+def get_scan_risk(scan_id: int, db: Session = Depends(get_db)) -> ScanRiskOut:
+    scan = db.get(m.Scan, scan_id)
+    if scan is None:
+        raise api_error(404, "NOT_FOUND", f"Scan {scan_id} not found")
+    data = risk_engine.score_scan(db, scan_id)
+    return ScanRiskOut(**data)
