@@ -22,6 +22,7 @@ from app.backend.errors import api_error
 from app.backend.schemas import (
     PAGE_SIZE_DEFAULT,
     PAGE_SIZE_MAX,
+    DeletionResearchOut,
     FindingOut,
     GraphOut,
     ImageOut,
@@ -32,7 +33,7 @@ from app.backend.schemas import (
     ToolRunOut,
     pagination_meta,
 )
-from app.backend.services import idempotency, identity_graph, risk_engine
+from app.backend.services import deletion_research, idempotency, identity_graph, risk_engine
 from app.backend.services.scan_orchestrator import run_scan
 
 router = APIRouter(prefix="/api/scans", tags=["scans"])
@@ -240,3 +241,15 @@ def get_scan_risk(scan_id: int, db: Session = Depends(get_db)) -> ScanRiskOut:
         raise api_error(404, "NOT_FOUND", f"Scan {scan_id} not found")
     data = risk_engine.score_scan(db, scan_id)
     return ScanRiskOut(**data)
+
+
+@router.post("/{scan_id}/deletion-research", status_code=200)
+def run_deletion_research(scan_id: int, db: Session = Depends(get_db)) -> DeletionResearchOut:
+    scan = db.get(m.Scan, scan_id)
+    if scan is None:
+        raise api_error(404, "NOT_FOUND", f"Scan {scan_id} not found")
+    counts = deletion_research.research_scan(db, scan_id)
+    db.add(m.AuditLog(actor="user", action="update", entity_type="scan", entity_id=scan.id,
+                      detail=f"deletion research: {counts['created']} created, {counts['skipped']} skipped"))
+    db.commit()
+    return DeletionResearchOut(scanId=scan_id, **counts)

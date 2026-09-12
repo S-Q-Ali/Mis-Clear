@@ -200,6 +200,31 @@ class ScanRiskOut(BaseModel):
     findings: list[FindingRiskOut]
 
 
+class PrivacyActionOut(Camelised):
+    id: int
+    findingId: int | None = forward(("findingId", "finding_id"))
+    recommendedAction: str = forward(("recommendedAction", "recommended_action"))
+    deletionUrl: str | None = forward(("deletionUrl", "deletion_url"))
+    instructions: str | None = forward(("instructions", "instructions"))
+    evidenceReference: str | None = forward(("evidenceReference", "evidence_reference"))
+    approvalRequired: bool = forward(("approvalRequired", "approval_required"))
+    status: str
+    createdAt: datetime = forward(("createdAt", "created_at"))
+    approvedAt: datetime | None = forward(("approvedAt", "approved_at"))
+
+
+class DeletionResearchOut(BaseModel):
+    scanId: int
+    researchable: int
+    created: int
+    skipped: int
+
+
+class ActionTransitionOut(BaseModel):
+    id: int
+    status: str
+
+
 class Pagination(BaseModel):
     page: int
     pageSize: int
