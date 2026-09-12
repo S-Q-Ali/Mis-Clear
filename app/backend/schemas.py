@@ -136,6 +136,27 @@ class WorkerStatusOut(BaseModel):
     colabApprovalRequired: bool
 
 
+class GraphNode(BaseModel):
+    id: list[str]
+    kind: str
+    value: str
+    canonical: str
+    scanCount: int
+    evidenceCount: int
+
+
+class GraphEdge(BaseModel):
+    source: list[str]
+    target: list[str]
+    type: str
+    evidenceFindingId: int | None = None
+
+
+class GraphOut(BaseModel):
+    nodes: list[GraphNode]
+    edges: list[GraphEdge]
+
+
 class ReportSummary(BaseModel):
     scan: ScanOut
     totalFindings: int

@@ -23,6 +23,7 @@ from app.backend.schemas import (
     PAGE_SIZE_DEFAULT,
     PAGE_SIZE_MAX,
     FindingOut,
+    GraphOut,
     ImageOut,
     Paginated,
     ScanCreate,
@@ -30,7 +31,7 @@ from app.backend.schemas import (
     ToolRunOut,
     pagination_meta,
 )
-from app.backend.services import idempotency
+from app.backend.services import idempotency, identity_graph
 from app.backend.services.scan_orchestrator import run_scan
 
 router = APIRouter(prefix="/api/scans", tags=["scans"])
@@ -208,3 +209,24 @@ def list_tool_runs(
     rows = db.execute(stmt.order_by(m.ToolRun.id.desc()).offset((page - 1) * pageSize).limit(pageSize)).scalars().all()
     return Paginated[ToolRunOut](data=[ToolRunOut.model_validate(r) for r in rows],
                                  pagination=pagination_meta(total, page, pageSize))
+
+
+@router.get("/{scan_id}/graph")
+def get_scan_graph(scan_id: int, db: Session = Depends(get_db)) -> GraphOut:
+    if db.get(m.Scan, scan_id) is None:
+        raise api_error(404, "NOT_FOUND", f"Scan {scan_id} not found")
+    data = identity_graph.graph_for_scan(db, scan_id)
+    return GraphOut(**data)
+
+
+@router.post("/{scan_id}/graph/rebuild", status_code=200)
+def rebuild_scan_graph(scan_id: int, db: Session = Depends(get_db)) -> GraphOut:
+    scan = db.get(m.Scan, scan_id)
+    if scan is None:
+        raise api_error(404, "NOT_FOUND", f"Scan {scan_id} not found")
+    identity_graph.rebuild_scan_graph(db, scan_id)
+    db.add(m.AuditLog(actor="user", action="update", entity_type="scan", entity_id=scan.id,
+                      detail="identity graph rebuilt"))
+    db.commit()
+    data = identity_graph.graph_for_scan(db, scan_id)
+    return GraphOut(**data)
