@@ -57,6 +57,14 @@ via direct binary download, then the dispatch loop), `worker.py` lifecycle
 plus the direct worker protocol `GET /api/jobs/next` and
 `POST /api/jobs/{job_id}/result`, simulating the full Colab lifecycle over real
 HTTP in `tests/e2e/test_colab_worker_flow_http.py`.
-End-to-end Colab transport pending Phase 9 wiring (photo vision/OCR/barcode) —
-everything degrades honestly (`blocked`/`interrupted`/`failed`) with Colab absent.
+Phase 15 end-to-end: hybrid photo scans route vision/OCR through
+`app/backend/services/vision_transport.py` (job created with the image as
+base64 in the payload, optionally pushed to a configured dispatcher inbox,
+then a synchronous terminal-state wait with an honest expiry/timeout no
+auto-completed result). The laptop's `tools/photo/vision.py` turns a
+worker's completed text into an `image_vision` finding; worker handlers in
+`colab/handlers.py` forward `image_base64` to Ollama's native `images`
+parameter. Covered by `tests/e2e/test_vision_transport_http.py` (simulated
+worker thread) and `tests/unit/test_photo_vision.py`.
+Everything degrades honestly (`blocked`/`interrupted`/`failed`) with Colab absent.
 Tested with synthetic data only (never real personal data).

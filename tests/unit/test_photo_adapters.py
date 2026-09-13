@@ -165,7 +165,7 @@ def test_vision_gracefully_blocked_without_backend(tmp_path):
     res = VisionAdapter(router=_NoBackendRouter(), strict_local=True).run(_save_png(tmp_path))
     assert res.status == "blocked"
     assert res.findings == []
-    assert "no AI backend" in res.coverage.get("note", "")
+    assert "no local AI vision backend available" in res.coverage.get("note", "")
 
 
 class _CrashRouter:

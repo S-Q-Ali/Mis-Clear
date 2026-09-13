@@ -21,7 +21,7 @@ run(target) -> ToolResult
 | ImageMagick | image transform | not required (Pillow) | – |
 | OpenCV | image ops (QR decode) | `tools/photo/qr.py` (opencv-headless) | ✅ Phase 7 |
 | Pillow | image load/EXIF/dhash | `tools/photo/base.py` | ✅ Phase 7 |
-| Tesseract | OCR | exported as `ocr` job → Colab worker (vision transport wiring ⬜ Phase 9) | ⬜ |
+| Tesseract | OCR | exported as `ocr` job → Colab worker via `app/backend/services/vision_transport.py` (image travels as base64 in the job payload; `colab/handlers.py` `_handle_ocr`) | ✅ Phase 15 wiring |
 | pHash | perceptual hashing | `tools/photo/phash.py` (d-hash) | ✅ Phase 7 |
 | Ollama Qwen | local reasoning | `app/backend/services/model_router.py` | ✅ router code (backend optional) |
 | Ollama Qwen-VL/Gemma | local vision | same | ✅ router code (backend optional) |
@@ -32,6 +32,7 @@ run(target) -> ToolResult
 - Prefer local-first; every external call must be optional + approved where it
   touches personal data.
 - Any tool with a network component is treated as untrusted input source.
-- Site manifests (`tools/site_manifests/`) ship as synthetic samples — replace
-  with real catalogs before user-facing scans; empty manifest = adapter reports
-  "no sites configured" (blocked).
+- Site manifests (`tools/site_manifests/`) ship as real catalogs — username
+  catalog generated from sherlock (MIT, ~256 sites, https-only, NSFW excluded),
+  email catalog curated from live-verified public services. Empty manifest =
+  adapter reports "no sites configured" (blocked).

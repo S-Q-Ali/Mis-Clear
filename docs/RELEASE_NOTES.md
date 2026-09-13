@@ -1,5 +1,35 @@
 # Release Notes — Privacy Guardian
 
+## v0.3.0 (2026-09-13) — Colab vision transport + real OSINT catalogs
+
+### What's new since 0.2.0
+- **Photo vision/OCR → Colab wired end-to-end**: `tools/photo/vision.py` now runs
+  hybrid scans through `app/backend/services/vision_transport.py` — the image
+  travels as base64 in a real `Job` (optional dispatcher push, then a
+  synchronous terminal-state wait with an honest expiry/timeout; never an
+  auto-"completed" result). Worker handlers in `colab/handlers.py` forward the
+  image to Ollama's native `images` parameter; a completed job becomes an
+  `image_vision` finding.
+- **Real site catalogs**: `tools/site_manifests/username.json` generated from
+  sherlock's catalog (MIT, ~256 https-only sites, NSFW + placeholder + non-https
+  excluded); `tools/site_manifests/email.json` curated from live-verified public
+  services (Spotify, X.com, LastPass, Duolingo, WordPress.com) with strict
+  exists/missing markers. GET-mode checks now report `None` (inconclusive) when
+  markers are declared but unmatched — no false-positive guesses.
+- **Server responsiveness fix**: the image-upload route runs the blocking scan on
+  a threadpool (`run_in_threadpool`) — previously it stalled the whole event
+  loop, making `/api/jobs/next` unresponsive during a scan.
+- **SQLite concurrency**: `build_engine` enables WAL + 30s busy timeout so the
+  worker protocol's writes queue gracefully instead of raising
+  `database is locked`.
+- **Final Phase-15 audit sweep**: no secrets, external-call whitelist verified,
+  no broken links, manifests + engine proven by tests.
+
+### Verification (v0.3.0)
+- **250 pytest functions green** (vision transport unit + E2E over real HTTP
+  with a simulated worker round-trip included).
+- ruff clean on changed modules; frontend `npm run build` + `lint` clean.
+
 ## v0.2.0 (2026-09-13) — Full pipeline: 15/15 phases
 
 Local-first privacy/OSINT assistant with evidence-based findings and

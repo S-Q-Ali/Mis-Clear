@@ -76,10 +76,14 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
   honest coverage; `POST /api/scans/{id}/run` + `POST /api/scans/{id}/image` upload.
 - `tools/` — adapters (`base.py` contract, `sitecheck.py` engine,
   `email/holehe.py`, `username/sherlock.py`, `web/{dns,whois,search,github}.py`,
-  `registry.py`, `site_manifests/` samples).
+  `registry.py`, `site_manifests/` real catalogs: username sherlock-derived,
+  email curated live-verified).
 - `tools/photo/` — local-first photo pipeline (`base.py` helpers, `hash.py`,
   `phash.py`, `exif.py`, `qr.py`, `registry.py`); `vision.py` routes vision/OCR
-  to the approved Colab worker (Phase 8) with graceful `blocked` degradation.
+  to the approved Colab worker via `app/backend/services/vision_transport.py`
+  (image as base64 in the job payload, optional dispatcher push, synchronous
+  terminal-state wait) with graceful `blocked`/`interrupted`/`failed`
+  degradation.
 - `app/frontend` — React 19 + TypeScript SPA (Phase 12): hash-free state-based
   sidebar nav; typed `fetch('/api/*')` client (`src/api.ts`) via Vite dev proxy
   → `127.0.0.1:8000`; views in `src/views/*` (Dashboard, Scans, ScanDetail with

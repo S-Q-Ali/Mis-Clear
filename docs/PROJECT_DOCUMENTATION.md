@@ -48,6 +48,8 @@ and coverage gaps.
    (SQLAlchemy) with versioned migrations.
 - **OSINT adapters** (`tools/`): stable `run(target) -> ToolResult` interface
   (`tools/base.py`); holehe/sherlock via site manifests (`tools/sitecheck.py`),
+  manifests ship as real catalogs (username: sherlock-derived, https-only,
+  NSFW/placeholder excluded; email: curated live-verified public services),
   web tools DNS-over-HTTPS (`tools/web/dns.py`), WHOIS/RDAP (`tools/web/whois.py`),
   DDG search (`tools/web/search.py`), GitHub (`tools/web/github.py`);
   `tools/registry.py` maps target types → adapters; `POST /api/scans/{id}/run`
@@ -57,8 +59,11 @@ and coverage gaps.
 - **Photo forensics** (`tools/photo/`): local-first pipeline (Pillow + OpenCV
   headless + stdlib hashlib) — md5/sha256 (`hash.py`), perceptual d-hash
   (`phash.py`), EXIF/GPS (`exif.py`, untrusted metadata), QR decode (`qr.py`);
-  `vision.py` routes vision/OCR to the approved Colab AI worker (Phase 8) with
-  graceful `blocked` degradation (no fabricated findings). `POST
+  `vision.py` routes vision/OCR to the approved Colab AI worker: local scans use
+  a local vision backend when present, hybrid scans transport the image (base64)
+  through `app/backend/services/vision_transport.py` as a real `Job` and turn a
+  worker's completed text into an `image_vision` finding; every failure degrades
+  honestly (`blocked`/`interrupted`/`failed`, never fabricated findings). `POST
   /api/scans/{id}/image` uploads (validated magic bytes + size cap) to
   `data/uploads`, then the orchestrator persists an `Image` row (hashes/pHash)
   + findings for `targetType=image` scans.
