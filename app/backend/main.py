@@ -22,7 +22,7 @@ from app.backend.security.middleware import SecurityHeadersMiddleware
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Privacy Guardian",
-        version="0.1.0",
+        version="0.2.0",
         description="Local-first personal privacy/OSINT assistant control plane",
     )
 

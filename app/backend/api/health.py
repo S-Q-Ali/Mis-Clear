@@ -1,6 +1,6 @@
 """Health endpoints."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter
 
@@ -12,5 +12,5 @@ def health() -> dict:
     return {
         "status": "ok",
         "service": "privacy-guardian",
-        "time": datetime.now(timezone.utc).isoformat(),
+        "time": datetime.now(UTC).isoformat(),
     }
