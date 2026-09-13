@@ -25,7 +25,7 @@ run(target) -> ToolResult
 | pHash | perceptual hashing | `tools/photo/phash.py` (d-hash) | ✅ Phase 7 |
 | Ollama Qwen | local reasoning | `app/backend/services/model_router.py` | ✅ router code (backend optional) |
 | Ollama Qwen-VL/Gemma | local vision | same | ✅ router code (backend optional) |
-| Colab worker | heavy vision/OCR/embeddings | `colab/` (capabilities, handlers, worker lifecycle, notebook); dispatch bind via `app/backend/services/job_dispatcher.py` | ✅ Phase 8 |
+| Colab worker | heavy vision/OCR/embeddings | `colab/` (capabilities, handlers, worker lifecycle, notebook incl. Ollama setup); dispatch bind via `app/backend/services/job_dispatcher.py` + direct protocol `GET /api/jobs/next`, `POST /api/jobs/{job_id}/result` | ✅ Phase 8 (+ protocol E2E) |
 | Laptop dispatcher | job submit/poll | `app/backend/services/job_dispatcher.py` + `POST /api/jobs/{id}/dispatch|poll` | ✅ Phase 8 |
 
 ## Policy

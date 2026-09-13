@@ -25,14 +25,14 @@ and coverage gaps.
 | 5 | Backend API | ✅ scans/findings/jobs/workers/reports + idempotency + error shape (28 tests) |
 | 6 | OSINT adapters | ✅ email/username/web tools + orchestrator + run endpoint (53 tests) |
 | 7 | Photo forensics | ✅ local pipeline: hashes/pHash/EXIF/QR + vision router stub + upload API (71 tests) |
-| 8 | Colab worker | ✅ capability probe, handler registry, worker lifecycle, notebook, laptop dispatcher+API (105 tests) |
+| 8 | Colab worker | ✅ capability probe, handler registry, worker lifecycle, notebook + direct protocol (`/api/jobs/next`, `/result`), laptop dispatcher+API (105 tests) |
 | 9 | Identity graph | ✅ deterministic link rules + cross-scan merge + graph API (121 tests) |
 | 10 | Risk engine | ✅ deterministic, reproducible 0–100 scoring + risk API (143 tests) |
 | 11 | Deletion research | ✅ official org/procedure + DRAFT requests + human approve/decline (160 tests) |
 | 12 | Frontend UI | ✅ React UI over the control plane (build/lint clean, 162 tests) |
 | 13 | Security | ✅ guardrails + 55-test battery + audits clean (217 tests) |
-| 14 | Testing | ✅ E2E over real HTTP + failure/recovery battery (230 tests) |
-| 15 | Audit | ⬜ |
+| 14 | Testing | ✅ E2E over real HTTP + failure/recovery battery + Colab worker protocol E2E (235 tests) |
+| 15 | Audit | ✅ final audit + release notes (235 tests) |
 
 ## Current implementation
 
@@ -83,7 +83,14 @@ and coverage gaps.
   unconfigured — never fabricated output), `worker.py` runs the master-plan §13
   lifecycle (`execute_job`: protocol → expiry → handler → temp cleanup →
   `data_deleted:true`; `run_worker_main` poll-proc-ack loop with reconnect),
-  `dispatch.py` covers fetch/ack transport; runnable `privacy_guardian_worker.ipynb`.
+  `dispatch.py` covers fetch/ack transport; runnable `privacy_guardian_worker.ipynb`
+  (Colab: streamlit-free Ollama install via direct binary download, then the
+  dispatch loop).
+  Direct worker protocol on the laptop (phase 8 follow-up): `GET /api/jobs/next`
+  (oldest queued job pickup, marks `running`, expires stale items, audit
+  `worker-pickup`) and `POST /api/jobs/{job_id}/result` (validates status,
+  persists `completed|failed|interrupted` + `data_deleted`, audit
+  `worker-result`).
   Laptop side: `app/backend/services/job_dispatcher.py` submits `JobRequest` to
   `colab_job_dispatcher_url` (empty → job stays queued with an honest
   "dispatcher not configured" error), polls results, expires late jobs as
@@ -130,17 +137,22 @@ and coverage gaps.
   hardening, command injection, prompt injection, malicious webpage,
   authorization, CORS/exposure, headers). Dep audits: pip-audit 0, npm audit 0.
 - **Tests**: `tests/unit/*`, `tests/integration/*`, `tests/security/*`, `tests/e2e/*`,
-  `tests/failure_recovery/*`; 230 pytest functions green
+  `tests/failure_recovery/*`; 235 pytest functions green
 - **E2E** (`tests/e2e/`, Phase 14): real uvicorn server on loopback + real SQLite
   DB + genuine HTTP via httpx — full investigation journey (create→run→
   findings→graph→risk→research→approve→logs), photo journey (multipart upload,
-  real pipeline), pagination/filters, report, headers over real sockets, and a
-  server-restart test proving DB is the system of record.
+  real pipeline), Colab worker protocol (create→`/next` pickup→`/result`→
+  persisted+audited; failure, empty, invalid-status cases), pagination/filters,
+  report, headers over real sockets, and a server-restart test proving DB is the
+  system of record.
 - **Failure/recovery** (`tests/failure_recovery/`, Phase 14): Ollama retry
   (transient→recovers, persistent→clean `ModelUnavailableError`, no retry on
   success); dispatcher down-then-up recovery at submit and via poll. Found +
   fixed a real bug: `poll_job` compared naive (SQLite round-trip) `expires_at`
   against UTC-aware `now` → now normalized before compare.
+- **Audit trail (Phase 15):** scan `run` events now logged (`action="run"`,
+  detail `type:value run completed`) alongside create/approve/graph-rebuild —
+  verified by integration test.
   + legacy (deferred) suite. Frontend: `tsc -b && vite build` and `oxlint` clean.
   Adapter tests run on fake transports (httpx.MockTransport)
   / synthetic images generated at test time — no live network, no real personal data.

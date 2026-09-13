@@ -65,7 +65,9 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
 - `app/backend/errors.py` — single error envelope + handlers.
 - `app/backend/api/{health,scans,findings,jobs,workers,reports,logs,settings}.py` —
   REST control plane (handlers: scans CRUD/findings/tool-runs, jobs CRUD, workers
-  status/probe, reports aggregation, audit-log read, read-only settings).
+  status/probe, reports aggregation, audit-log read, read-only settings). Jobs
+  adds the direct worker protocol: `GET /api/jobs/next` (pickup, marks running,
+  expires stale) and `POST /api/jobs/{job_id}/result` (persist JobResult).
 - `app/backend/services/{model_router,idempotency}.py` — AI routing; idempotency keys
   (`idempotency_keys` table: atomic claim, replay/mismatch/in-flight resolution).
 - `app/backend/models.py` + `database/migrations.py` — 9 tables + versioned migrations (v3).

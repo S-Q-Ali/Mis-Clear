@@ -49,10 +49,14 @@ and `JobResult` (status, started/completed_at, result, errors, data_deleted).
 - `expires_at` bounds job lifetime.
 
 ## Implementation
-Phase 8 complete: notebook `privacy_guardian_worker.ipynb`, `worker.py` lifecycle
+Phase 8 complete: notebook `privacy_guardian_worker.ipynb` (Colab Ollama install
+via direct binary download, then the dispatch loop), `worker.py` lifecycle
 (execute_job + run_worker_main loop), `capabilities.py` GPU probe,
 `handlers.py` registry, `dispatch.py` transport, and laptop-side
-`app/backend/services/job_dispatcher.py` (+ `POST /api/jobs/{id}/dispatch|poll`).
+`app/backend/services/job_dispatcher.py` (+ `POST /api/jobs/{id}/dispatch|poll`)
+plus the direct worker protocol `GET /api/jobs/next` and
+`POST /api/jobs/{job_id}/result`, simulating the full Colab lifecycle over real
+HTTP in `tests/e2e/test_colab_worker_flow_http.py`.
 End-to-end Colab transport pending Phase 9 wiring (photo vision/OCR/barcode) —
 everything degrades honestly (`blocked`/`interrupted`/`failed`) with Colab absent.
 Tested with synthetic data only (never real personal data).
