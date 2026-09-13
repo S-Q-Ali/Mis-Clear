@@ -64,10 +64,12 @@ Or use the scripts: `scripts/setup.ps1`, `scripts/start.ps1`, `scripts/stop.ps1`
 AI models (reasoning `qwen3:8b`, vision `gemma3:4b`) default to **Colab-first
 with a local-Ollama fallback** once a Colab endpoint is configured:
 
-1. Run `colab/privacy_guardian_worker.ipynb` in Colab (installs Ollama, pulls
-   both models, starts the dispatch loop).
-2. Start tunnels for the **job dispatcher** and the **Ollama AI** port, then add
-   them to `.env`:
+1. Run `colab/privacy_guardian_worker.ipynb` in Colab (7 sections: install Ollama,
+   pull both models, clone repo, probe capabilities, run the dispatch loop).
+2. Tunnel the **job dispatcher** on the laptop
+   (`cloudflared tunnel --url http://127.0.0.1:8000`) and the **Ollama AI** port
+   in Colab (notebook cell 7 already starts a `cloudflared` tunnel to 11434), then
+   add both URLs to `.env`:
    ```
    PG_COLAB_OLLAMA_URL=https://<ollama-tunnel>
    PG_COLAB_JOB_DISPATCHER_URL=https://<dispatcher>/api

@@ -10,7 +10,7 @@ Optional heavy-computation worker. The laptop stays the system of record.
 - `dispatch.py` — `fetch_next_job`/`submit_result` transport (versioned header)
 - `worker.py` — stateless lifecycle: `execute_job` (protocol → expiry → handler →
   temp cleanup → `JobResult`) and `run_worker_main` poll-proc-ack loop
-- `privacy_guardian_worker.ipynb` — runnable notebook (setup → probe → loop)
+- `privacy_guardian_worker.ipynb` — runnable notebook (7 sections: config → Ollama → models → clone → probe → loop → tunnel)
 
 ## Rules
 - Never store the primary evidence database in Colab.
@@ -20,7 +20,15 @@ Optional heavy-computation worker. The laptop stays the system of record.
 - Heavy/approved work only; local-only mode must work with Colab absent.
 
 ## Running
-1. Open `privacy_guardian_worker.ipynb` in Colab and run all cells.
-2. Set `COLAB_JOB_DISPATCHER_URL` to a tunnel exposing the laptop dispatcher
-   (`POST /api/jobs`, then `/jobs/{id}/dispatch` + `/jobs/{id}/poll` on the laptop
-   with the matching `PG_COLAB_JOB_DISPATCHER_URL` in `.env`).
+1. Open `privacy_guardian_worker.ipynb` in Colab and run the 7 sections:
+   1. Configuration — set `COLAB_JOB_DISPATCHER_URL`
+   2. Install Ollama (binary install, server on `0.0.0.0:11434`)
+   3. Download AI models (`qwen3:8b` + `gemma3:4b` by default)
+   4. Clone repo + deps (`git clone` + `sys.path` + `httpx`)
+   5. Capability probe (GPU/CPU/models advertisement)
+   6. Dispatch loop — poll-proc-ack vs the laptop dispatcher
+   7. Expose Colab Ollama (optional `cloudflared` tunnel for `PG_COLAB_OLLAMA_URL`)
+2. Set `COLAB_JOB_DISPATCHER_URL` to a tunnel exposing the laptop's `127.0.0.1:8000`
+   (e.g. `cloudflared tunnel --url http://127.0.0.1:8000`); the worker polls
+   `GET {dispatcher}/jobs/next` and acks `POST {dispatcher}/jobs/{job_id}/result`
+   with the matching `PG_COLAB_JOB_DISPATCHER_URL` in `.env`.

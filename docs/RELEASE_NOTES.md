@@ -12,6 +12,12 @@
   LOCAL ONLY scans never contact Colab (privacy gate preserved).
 - Added two fallback tests (`test_hybrid_failed_job_falls_back_to_local`,
   `test_hybrid_interrupted_job_falls_back_to_local`).
+- **Notebook completed**: `colab/privacy_guardian_worker.ipynb` now implements
+  the full 7-section sequence — clone repo/deps, capability probe, the dispatcher
+  loop (refuses to run without a dispatcher URL), and an optional `cloudflared`
+  tunnel cell that prints the Colab Ollama URL for `PG_COLAB_OLLAMA_URL`. Docs
+  (`README`, `COLAB_GPU_ARCHITECTURE.md`, `colab/README.md`) updated to the new
+  cell layout with both tunnel directions.
 
 ### Verification (v0.3.1)
 - **252 pytest functions green** (was 250); ruff clean; frontend build + lint clean.

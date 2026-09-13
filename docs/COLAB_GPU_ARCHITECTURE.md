@@ -82,15 +82,24 @@ Tested with synthetic data only (never real personal data).
 
 ## Setup — Colab GPU Worker + Ollama AI
 
-1. Open `colab/privacy_guardian_worker.ipynb` in Google Colab and run the cells:
-   install Ollama, download the models (default `qwen3:8b` + `gemma3:4b`),
-   then start the dispatch loop (fetch → process → acknowledge).
-2. Expose two endpoints over tunnels (e.g. Cloudflare `trycloudflare.com`):
-   - **Job dispatcher** — points at the laptop dispatcher base; the worker polls
+1. Open `colab/privacy_guardian_worker.ipynb` in Google Colab and run the cells
+   (7 sections):
+   1. **Configuration** — set `COLAB_JOB_DISPATCHER_URL` to the laptop tunnel.
+   2. **Install Ollama** — binary install + server on `0.0.0.0:11434`.
+   3. **Download AI models** — default `qwen3:8b` + `gemma3:4b` (GPU).
+   4. **Clone repo + deps** — `git clone` + `sys.path` + `httpx`.
+   5. **Capability probe** — advertises GPU/CPU/models.
+   6. **Dispatch loop** — poll-proc-ack (`GET /jobs/next` → process →
+      `POST /jobs/{job_id}/result`). Refuses to run without a dispatcher URL.
+   7. **Expose Colab Ollama (optional)** — `cloudflared` tunnel to port 11434;
+      prints the `https://<...>.trycloudflare.com` URL for `PG_COLAB_OLLAMA_URL`.
+2. Two tunnels, one per direction:
+   - **Job dispatcher** — created on the **laptop**, points at `127.0.0.1:8000`
+     (e.g. `cloudflared tunnel --url http://127.0.0.1:8000`). Colab polls it via
      `GET {dispatcher}/jobs/next` and acks `POST {dispatcher}/jobs/{job_id}/result`.
-   - **Ollama AI** — points at the Colab VM's Ollama port (11434) so the laptop's
-     `ModelRouter` can call `/api/generate` directly (reasoning) and send
-     `images=[base64]` (vision).
+   - **Ollama AI** — created in **Colab** (notebook cell 7), points at the local
+     Ollama port 11434 so the laptop's `ModelRouter` can call `/api/generate`
+     directly (reasoning) and send `images=[base64]` (vision).
 3. Configure the laptop `.env`:
    ```
    PG_COLAB_OLLAMA_URL=https://<ollama-tunnel>          # direct AI inference
