@@ -23,7 +23,7 @@ All master-plan phases delivered (15/15, **v0.3.0**). Full pipeline runs
 locally: FastAPI control plane + React/TS SPA, OSINT discovery, photo
 forensics, deterministic risk scoring, evidence-based privacy actions, and an
 optional approved Colab worker for heavy vision/OCR (wired end-to-end).
-250 pytest tests green; ruff clean; frontend build + lint clean.
+252 pytest tests green; ruff clean; frontend build + lint clean.
 
 ## Features
 
@@ -58,6 +58,23 @@ cd app/frontend && npm install && npm run dev     # frontend (5173)
 ```
 
 Or use the scripts: `scripts/setup.ps1`, `scripts/start.ps1`, `scripts/stop.ps1`.
+
+### Heavy AI on the Colab GPU worker
+
+AI models (reasoning `qwen3:8b`, vision `gemma3:4b`) default to **Colab-first
+with a local-Ollama fallback** once a Colab endpoint is configured:
+
+1. Run `colab/privacy_guardian_worker.ipynb` in Colab (installs Ollama, pulls
+   both models, starts the dispatch loop).
+2. Start tunnels for the **job dispatcher** and the **Ollama AI** port, then add
+   them to `.env`:
+   ```
+   PG_COLAB_OLLAMA_URL=https://<ollama-tunnel>
+   PG_COLAB_JOB_DISPATCHER_URL=https://<dispatcher>/api
+   ```
+3. Restart the backend. New scans now default to `hybrid` and heavy vision/OCR
+   routes to Colab; if Colab is unreachable the scan falls back to local Ollama
+   instead of failing (details in `docs/COLAB_GPU_ARCHITECTURE.md`).
 
 ## Layout
 

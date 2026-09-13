@@ -1,5 +1,21 @@
 # Release Notes — Privacy Guardian
 
+## v0.3.1 (2026-09-13) — Colab-first AI with local fallback
+
+- **Heavy AI models are now Colab-first**: configuring any Colab endpoint
+  (`PG_COLAB_OLLAMA_URL` or `PG_COLAB_JOB_DISPATCHER_URL`) switches the
+  effective default scan mode to `hybrid`, so vision/OCR/reasoning route to the
+  approved Colab worker when available.
+- **Graceful local fallback**: when a Colab job fails, interrupts, or times out,
+  `VisionAdapter` now degrades to local Ollama (`_try_local`) instead of
+  reporting `blocked` — only blocked when *no* local backend exists either.
+  LOCAL ONLY scans never contact Colab (privacy gate preserved).
+- Added two fallback tests (`test_hybrid_failed_job_falls_back_to_local`,
+  `test_hybrid_interrupted_job_falls_back_to_local`).
+
+### Verification (v0.3.1)
+- **252 pytest functions green** (was 250); ruff clean; frontend build + lint clean.
+
 ## v0.3.0 (2026-09-13) — Colab vision transport + real OSINT catalogs
 
 ### What's new since 0.2.0

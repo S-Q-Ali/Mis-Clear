@@ -47,5 +47,17 @@ class Settings(BaseSettings):
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
+    @property
+    def effective_default_scan_mode(self) -> str:
+        """Hybrid (Colab-first) once any Colab compute endpoint is configured.
+
+        Docs (COLAB_GPU_ARCHITECTURE): heavy AI work routes to the approved
+        Colab worker when available; local Ollama is the graceful fallback.
+        Sensitive data still requires explicit approval (scan_mode=hybrid).
+        """
+        if self.colab_ollama_url or self.colab_job_dispatcher_url:
+            return "hybrid"
+        return self.default_scan_mode
+
 
 settings = Settings()

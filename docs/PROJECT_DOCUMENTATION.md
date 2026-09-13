@@ -59,11 +59,14 @@ and coverage gaps.
 - **Photo forensics** (`tools/photo/`): local-first pipeline (Pillow + OpenCV
   headless + stdlib hashlib) — md5/sha256 (`hash.py`), perceptual d-hash
   (`phash.py`), EXIF/GPS (`exif.py`, untrusted metadata), QR decode (`qr.py`);
-  `vision.py` routes vision/OCR to the approved Colab AI worker: local scans use
-  a local vision backend when present, hybrid scans transport the image (base64)
-  through `app/backend/services/vision_transport.py` as a real `Job` and turn a
-  worker's completed text into an `image_vision` finding; every failure degrades
-  honestly (`blocked`/`interrupted`/`failed`, never fabricated findings). `POST
+  `vision.py` is **Colab-first with a local-Ollama fallback**: local scans use a
+  local vision backend only, hybrid scans transport the image (base64) through
+  `app/backend/services/vision_transport.py` as a real `Job` and turn a worker's
+  completed text into an `image_vision` finding; when a Colab job fails or
+  interrupts, the adapter degrades gracefully to local Ollama before reporting
+  `blocked` — blocked only when no backend exists at all (never fabricated
+  findings). Configuring any Colab endpoint sets the effective default scan mode
+  to `hybrid`. `POST
   /api/scans/{id}/image` uploads (validated magic bytes + size cap) to
   `data/uploads`, then the orchestrator persists an `Image` row (hashes/pHash)
   + findings for `targetType=image` scans.

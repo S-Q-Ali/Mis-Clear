@@ -15,7 +15,7 @@ def get_settings() -> SettingsOut:
     return SettingsOut(
         readOnly=True,
         osintEnabled=settings.osint_enabled,
-        defaultScanMode=settings.default_scan_mode,
+        defaultScanMode=settings.effective_default_scan_mode,
         hybridRequiresExplicitApproval=settings.hybrid_requires_explicit_approval,
         localAiConfigured=ws.localAiConfigured,
         localAiAvailable=ws.localAiAvailable,

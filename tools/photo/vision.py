@@ -5,8 +5,10 @@ Routing (deterministic, never fabricated):
     backend is available the adapter reports status=blocked honestly.
   - hybrid (scan_mode=hybrid): the image (base64) is sent as a Job to the
     approved Colab worker; the laptop waits for a terminal state and turns a
-    completed result into an `image_vision` finding. Timeout/failure →
-    status=blocked with the worker's errors copied.
+    completed result into an `image_vision` finding. Colab-first: when the
+    worker is absent/fails/interrupts, the adapter degrades gracefully to
+    local Ollama (`_try_local`) before reporting blocked. Timeout/failure with
+    no local backend → status=blocked with the worker's errors copied.
 
 barcodes/QR: QR is decoded locally (photo-qr); 1D barcodes stay on the worker
 until a dedicated decoder is wired (never faked here).
@@ -98,30 +100,31 @@ class VisionAdapter(ToolAdapter):
         if self.strict_local:
             self._run_local(result, image_b64, start)
         else:
-            self._run_hybrid(result, target, start)
+            self._run_hybrid(result, image_b64, target, start)
         return result
 
-    def _run_local(self, result: ToolResult, image_b64: str, start: float) -> None:
+    def _try_local(self, result: ToolResult, image_b64: str, start: float) -> bool:
+        """Run local Ollama vision; returns True when a terminal state was set.
+
+        False means the router had no local backend, so the caller decides
+        how to report it (local-only scan vs. hybrid fallback).
+        """
         try:
             backend = self.router.route(strict_local=True)
         except Exception as exc:  # noqa: BLE001 - router must never crash the pipeline
             self._result_blocked(result, f"router error: {exc}", [str(exc)])
-            return
+            return True
         if backend is None:
-            self._result_blocked(
-                result,
-                "no local AI vision backend available; use hybrid scan mode with an approved Colab worker",
-            )
-            return
+            return False
         try:
             resp = backend.generate(_VISION_PROMPT, images=[image_b64])
         except ModelUnavailableError as exc:
             self._result_blocked(result, "local vision inference failed", [str(exc)])
-            return
+            return True
         text = (resp.text or "").strip()
         if not text:
             self._result_blocked(result, "local vision model returned empty output")
-            return
+            return True
         result.findings = self._finding(text)
         result.status = "completed"
         result.coverage = {
@@ -132,8 +135,16 @@ class VisionAdapter(ToolAdapter):
         }
         result.raw_reference = f"{resp.backend}:{resp.model}"
         result.duration_ms = int((time.perf_counter() - start) * 1000) + resp.duration_ms
+        return True
 
-    def _run_hybrid(self, result: ToolResult, target: str, start: float) -> None:
+    def _run_local(self, result: ToolResult, image_b64: str, start: float) -> None:
+        if not self._try_local(result, image_b64, start):
+            self._result_blocked(
+                result,
+                "no local AI vision backend available; use hybrid scan mode with an approved Colab worker",
+            )
+
+    def _run_hybrid(self, result: ToolResult, image_b64: str, target: str, start: float) -> None:
         ttl = settings.colab_job_timeout_seconds
         db = self._db_session()
         try:
@@ -167,11 +178,12 @@ class VisionAdapter(ToolAdapter):
                     result.raw_reference = str(r.get("model") or "?")
                     result.duration_ms = int((time.perf_counter() - start) * 1000)
                     return
-                self._result_blocked(result, "colab worker completed without usable output", job.errors or [])
+            # Colab worker absent/unusable: graceful degradation to local Ollama.
+            if self._try_local(result, image_b64, start):
                 return
             self._result_blocked(
                 result,
-                f"colab vision {job.status} after {ttl}s wait",
+                f"colab vision {job.status} after {ttl}s wait with no local AI backend",
                 job.errors or [f"job {job.status}"],
             )
         finally:

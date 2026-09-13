@@ -21,6 +21,10 @@ export default function Scans({ onOpen }: Props) {
 
   useEffect(() => { load() }, [load])
 
+  useEffect(() => {
+    api.getSettings().then((s) => setForm((f) => ({ ...f, scanMode: f.scanMode === 'local' ? s.defaultScanMode : f.scanMode }))).catch(() => {})
+  }, [])
+
   const create = async () => {
     if (!form.targetValue.trim()) { setError('Target value required'); return }
     setBusy('Creating scan…')

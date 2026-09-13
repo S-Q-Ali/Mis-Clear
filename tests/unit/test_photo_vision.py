@@ -164,6 +164,60 @@ def test_hybrid_failed_job_returns_blocked(tmp_path, monkeypatch):
     assert "failed" in res.coverage.get("note", "")
 
 
+def test_hybrid_failed_job_falls_back_to_local(tmp_path, monkeypatch):
+    """Colab job fails but local Ollama exists -> graceful local fallback (never blocked)."""
+    from app.backend.services import vision_transport as vt
+
+    S = _fresh_session(tmp_path)
+    be = _FakeBackend(name="fake-local")
+
+    def _fake_run(db_, job_id, **_kw):
+        from sqlalchemy import select
+
+        from app.backend import models as m
+
+        job = db_.execute(select(m.Job).where(m.Job.job_id == job_id)).scalar_one_or_none()
+        job.status = "failed"
+        job.errors = ["GPU OOM"]
+        db_.commit()
+        return job
+
+    monkeypatch.setattr(vt, "run_job_sync", _fake_run)
+    a = VisionAdapter(router=_FakeRouter(be), strict_local=False, session_factory=lambda: S())
+    res = a.run(str(_png(tmp_path)))
+    assert res.status == "completed"
+    assert len(res.findings) == 1
+    assert res.findings[0].type == "image_vision"
+    assert be.calls[0]["kwargs"].get("images"), "local fallback must send image bytes"
+    assert "local vision" in res.coverage.get("note", "")
+
+
+def test_hybrid_interrupted_job_falls_back_to_local(tmp_path, monkeypatch):
+    """Colab worker vanishes and local Ollama exists -> honest local fallback."""
+    from app.backend.services import vision_transport as vt
+
+    S = _fresh_session(tmp_path)
+    be = _FakeBackend(name="fake-local")
+
+    def _fake_run(db_, job_id, **_kw):
+        from sqlalchemy import select
+
+        from app.backend import models as m
+
+        job = db_.execute(select(m.Job).where(m.Job.job_id == job_id)).scalar_one_or_none()
+        job.status = "interrupted"
+        job.errors = ["no Colab worker completed this job"]
+        db_.commit()
+        return job
+
+    monkeypatch.setattr(vt, "run_job_sync", _fake_run)
+    a = VisionAdapter(router=_FakeRouter(be), strict_local=False, session_factory=lambda: S())
+    res = a.run(str(_png(tmp_path)))
+    assert res.status == "completed"
+    assert len(res.findings) == 1
+    assert "local vision" in res.coverage.get("note", "")
+
+
 def test_hybrid_completed_job_produces_finding(tmp_path, monkeypatch):
     from app.backend.services import vision_transport as vt
 

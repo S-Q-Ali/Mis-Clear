@@ -11,11 +11,20 @@ Colab is never the system of record, and the app never depends on it:
 Colab down → local Ollama (if any) → graceful degradation. Switching the remote
 compute to a T4/L4/A100 server is a **configuration change** only.
 
-## Routing (ModelRouter)
+## Routing (ModelRouter + VisionAdapter)
 `app/backend/services/model_router.py`:
 - Colab Ollama used only when **explicitly approved** AND available.
 - `strict_local` (LOCAL ONLY mode) forbids Colab entirely.
 - No backend available → `ModelUnavailableError` → UI shows AI as inactive; work continues.
+
+**Colab-first with local fallback** — once any Colab endpoint is configured
+(`PG_COLAB_OLLAMA_URL` or `PG_COLAB_JOB_DISPATCHER_URL`), the effective default
+scan mode becomes `hybrid`, so heavy AI work (vision/OCR/reasoning) routes to
+the approved Colab worker when available. If Colab is down, mid-scan or absent,
+the pipeline degrades gracefully to local Ollama instead of blocking:
+`Colab job failed/interrupted → VisionAdapter._try_local → completed locally`.
+Sensitive data still requires explicit approval (scan_mode=hybrid); LOCAL ONLY
+scans never contact Colab.
 
 ## Privacy modes
 - **LOCAL ONLY** — sensitive data never leaves the laptop.
@@ -66,5 +75,27 @@ worker's completed text into an `image_vision` finding; worker handlers in
 `colab/handlers.py` forward `image_base64` to Ollama's native `images`
 parameter. Covered by `tests/e2e/test_vision_transport_http.py` (simulated
 worker thread) and `tests/unit/test_photo_vision.py`.
-Everything degrades honestly (`blocked`/`interrupted`/`failed`) with Colab absent.
+Everything degrades honestly (`blocked`/`interrupted`/`failed`) with Colab absent
+— when a local Ollama is available it is used as the graceful fallback; when
+neither is available the scan reports `blocked`, never a fabricated result.
 Tested with synthetic data only (never real personal data).
+
+## Setup — Colab GPU Worker + Ollama AI
+
+1. Open `colab/privacy_guardian_worker.ipynb` in Google Colab and run the cells:
+   install Ollama, download the models (default `qwen3:8b` + `gemma3:4b`),
+   then start the dispatch loop (fetch → process → acknowledge).
+2. Expose two endpoints over tunnels (e.g. Cloudflare `trycloudflare.com`):
+   - **Job dispatcher** — points at the laptop dispatcher base; the worker polls
+     `GET {dispatcher}/jobs/next` and acks `POST {dispatcher}/jobs/{job_id}/result`.
+   - **Ollama AI** — points at the Colab VM's Ollama port (11434) so the laptop's
+     `ModelRouter` can call `/api/generate` directly (reasoning) and send
+     `images=[base64]` (vision).
+3. Configure the laptop `.env`:
+   ```
+   PG_COLAB_OLLAMA_URL=https://<ollama-tunnel>          # direct AI inference
+   PG_COLAB_JOB_DISPATCHER_URL=https://<dispatcher>/api # job transport
+   ```
+   With either set, new scans default to `hybrid` and AI work is Colab-first.
+4. Restart the backend. The Workers page shows Colab availability; the Dashboard
+   AI mode becomes `hybrid` once a Colab endpoint is configured.
