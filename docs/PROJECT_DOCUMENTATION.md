@@ -92,7 +92,8 @@ and coverage gaps.
   lifecycle (`execute_job`: protocol → expiry → handler → temp cleanup →
   `data_deleted:true`; `run_worker_main` poll-proc-ack loop with reconnect),
   `dispatch.py` covers fetch/ack transport; runnable `privacy_guardian_worker.ipynb`
-  (Colab: streamlit-free Ollama install via direct binary download, 7 sections:
+  (Colab: streamlit-free Ollama install via `ollama-linux-amd64.tar.zst` archive
+  download + `zstd` decompress, 7 sections:
   configuration → Ollama install → model pulls → repo clone/deps → capability
   probe → dispatcher loop → optional Ollama tunnel).
   Direct worker protocol on the laptop (phase 8 follow-up): `GET /api/jobs/next`

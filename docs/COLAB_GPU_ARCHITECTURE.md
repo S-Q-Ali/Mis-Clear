@@ -59,7 +59,8 @@ and `JobResult` (status, started/completed_at, result, errors, data_deleted).
 
 ## Implementation
 Phase 8 complete: notebook `privacy_guardian_worker.ipynb` (Colab Ollama install
-via direct binary download, then the dispatch loop), `worker.py` lifecycle
+via direct `ollama-linux-amd64.tar.zst` archive download + `zstd` decompress,
+then the dispatch loop), `worker.py` lifecycle
 (execute_job + run_worker_main loop), `capabilities.py` GPU probe,
 `handlers.py` registry, `dispatch.py` transport, and laptop-side
 `app/backend/services/job_dispatcher.py` (+ `POST /api/jobs/{id}/dispatch|poll`)

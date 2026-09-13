@@ -12,6 +12,11 @@
   LOCAL ONLY scans never contact Colab (privacy gate preserved).
 - Added two fallback tests (`test_hybrid_failed_job_falls_back_to_local`,
   `test_hybrid_interrupted_job_falls_back_to_local`).
+- **Ollama install fix**: Ollama retired the bare `ollama-linux-amd64` binary
+  URL (now 404); the notebook cell downloads the `ollama-linux-amd64.tar.zst`
+  archive and decompresses with `zstd` (pip `zstandard` fallback when the tool
+  is missing). Dispatcher loop also warns when `COLAB_JOB_DISPATCHER_URL` uses a
+  `.api` dot‑suffix instead of the `/api` path.
 - **Notebook completed**: `colab/privacy_guardian_worker.ipynb` now implements
   the full 7-section sequence — clone repo/deps, capability probe, the dispatcher
   loop (refuses to run without a dispatcher URL), and an optional `cloudflared`
@@ -68,8 +73,8 @@ human-approved actions. All master-plan phases delivered.
   release notes; docs sync.
 - Colab follow-ups: direct worker protocol on the control plane
   (`GET /api/jobs/next`, `POST /api/jobs/{job_id}/result`) with E2E coverage;
-  notebook auto-installs Ollama (direct binary download) before the dispatch
-  loop; findings pageSize capped at the backend max (100).
+  notebook auto-installs Ollama (`ollama-linux-amd64.tar.zst` archive download)
+  before the dispatch loop; findings pageSize capped at the backend max (100).
 
 ### Full scope (Phase 0–15)
 | Area | Delivered |
