@@ -121,7 +121,12 @@ async def upload_image(
     )
     scan.status = "pending"
     db.commit()
-    run_scan(db, scan, tool_filter=None)
+    # run_scan is blocking (adapters + possible synchronous Colab job round-trip).
+    # An `async` route must not execute it on the event loop or the whole server
+    # stalls (no /next, no /result, no health). Delegate to the threadpool.
+    from fastapi.concurrency import run_in_threadpool
+
+    await run_in_threadpool(lambda: run_scan(db, scan, tool_filter=None))
     updated = db.get(m.Scan, scan_id)
     return ScanOut.model_validate(updated)
 

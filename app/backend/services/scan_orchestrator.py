@@ -126,7 +126,10 @@ def run_scan(
     for adapter in adapters:
         tool_run = m.ToolRun(scan_id=scan.id, tool=adapter.name, status="running")
         db.add(tool_run)
-        db.flush()
+        # Commit the staging row BEFORE running the adapter: a long synchronous
+        # wait (photo vision → Colab job round-trip) must not hold the request
+        # session's write lock against the worker's own writes to the SQLite DB.
+        db.commit()
         try:
             result: ToolResult = adapter.run(scan.target_value)
         except Exception as exc:  # noqa: BLE001 - adapter contract says no raise; stay resilient

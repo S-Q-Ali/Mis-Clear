@@ -75,7 +75,7 @@ class OllamaBackend:
         payload: dict[str, Any] = {"model": self.model, "prompt": prompt, "stream": False}
         if system:
             payload["system"] = system
-        payload.update({k: v for k, v in kwargs.items() if k in ("options", "keep_alive")})
+        payload.update({k: v for k, v in kwargs.items() if k in ("options", "keep_alive", "images")})
         last_error: Exception | None = None
         for attempt in range(self.retries + 1):
             try:
@@ -91,7 +91,7 @@ class OllamaBackend:
                     duration_ms=int((time.monotonic() - start) * 1000),
                     raw=data,
                 )
-            except httpx.HTTPError as exc:  # noqa: PERF203 - deliberate retry loop
+            except httpx.HTTPError as exc:
                 last_error = exc
                 if attempt < self.retries:
                     time.sleep(1)

@@ -1,11 +1,12 @@
-"""Job handler registry + built-in synthetic handlers (Phase 8).
+"""Job handler registry + built-in handlers (Phase 8; vision/OCR image transport Phase 15).
 
-Every handler receives `(payload: dict, capabilities: CapabilityReport) -> dict`.
-Handlers must never fabricate AI results when no model backend is available:
-missing model → explicit `{"ok": False, "note": "model not available"}`.
+Every handler receives `(payload: dict, capabilities: CapabilityReport, client: httpx.Client | None) ->
+dict`. Handlers must never fabricate AI results when no model backend is
+available: missing model → explicit `{"ok": False, "note": "..."}`.
 
 Built-in job types: `reasoning` (Ollama), `vision_analysis`, `ocr`, `barcode`,
-`embeddings`. Actual GPU/colab backend usage wired in later phase.
+`embeddings`. Vision/OCR carry the image as base64 in `payload["image_base64"]`
+and hand it to Ollama via the native `images` parameter.
 """
 
 from __future__ import annotations
@@ -17,9 +18,15 @@ import httpx
 
 from colab.capabilities import CapabilityReport
 
-HandlerFn = Callable[[dict[str, Any], CapabilityReport], dict[str, Any]]
+HandlerFn = Callable[[dict[str, Any], CapabilityReport, "httpx.Client | None"], dict[str, Any]]
 
 _REGISTRY: dict[str, HandlerFn] = {}
+
+_VISION_DEFAULT = "gemma3:4b"
+_OCR_PROMPT = (
+    "Transcribe all visible text in this image verbatim, preserving order. "
+    "If no text is visible, reply exactly: NO_TEXT."
+)
 
 
 def register_handler(job_type: str, fn: HandlerFn) -> None:
@@ -42,12 +49,13 @@ def _ollama_generate(
     model = payload.get("model") or "qwen3:8b"
     if not prompt:
         return {"ok": False, "note": "empty prompt"}
+    body: dict[str, Any] = {"model": model, "prompt": prompt, "stream": False}
+    image_b64 = payload.get("image_base64")
+    if image_b64:
+        body["images"] = [image_b64]
     try:
         with (client if client is not None else httpx.Client(timeout=30)) as http:
-            resp = http.post(
-                f"{base_url.rstrip('/')}/api/generate",
-                json={"model": model, "prompt": prompt, "stream": False},
-            )
+            resp = http.post(f"{base_url.rstrip('/')}/api/generate", json=body)
             resp.raise_for_status()
             data = resp.json()
             return {"ok": True, "text": data.get("response", ""), "model": model}
@@ -55,33 +63,48 @@ def _ollama_generate(
         return None
 
 
-def _handle_reasoning(payload: dict[str, Any], caps: CapabilityReport) -> dict[str, Any]:
-    result = _ollama_generate(payload, base_url=payload.get("base_url", "http://127.0.0.1:11434"))
+def _handle_reasoning(payload: dict[str, Any], caps: CapabilityReport, client: httpx.Client | None = None) -> dict[str, Any]:
+    result = _ollama_generate(payload, base_url=payload.get("base_url", "http://127.0.0.1:11434"), client=client)
     if result is None:
         return {"ok": False, "note": "local Ollama not available"}
     return result
 
 
-def _handle_vision(payload: dict[str, Any], caps: CapabilityReport) -> dict[str, Any]:
-    model = payload.get("model") or "gemma3:4b"
+def _handle_vision(payload: dict[str, Any], caps: CapabilityReport, client: httpx.Client | None = None) -> dict[str, Any]:
+    model = payload.get("model") or _VISION_DEFAULT
     if not caps.gpu and model not in caps.models:
         return {"ok": False, "note": "no vision model backend available", "model": model}
-    return _ollama_generate({"prompt": payload.get("prompt", ""), "model": model}) or {"ok": False, "note": "vision backend unreachable"}
+    result = _ollama_generate(
+        {"prompt": payload.get("prompt", ""), "model": model, "image_base64": payload.get("image_base64")},
+        base_url=payload.get("base_url", "http://127.0.0.1:11434"),
+        client=client,
+    )
+    if result is None:
+        return {"ok": False, "note": "vision backend unreachable", "model": model}
+    return result
 
 
-def _handle_ocr(payload: dict[str, Any], caps: CapabilityReport) -> dict[str, Any]:
+def _handle_ocr(payload: dict[str, Any], caps: CapabilityReport, client: httpx.Client | None = None) -> dict[str, Any]:
     if not caps.gpu:
         return {"ok": False, "note": "OCR requires GPU/colab worker"}
-    return _handle_vision({"prompt": payload.get("prompt", ""), "model": payload.get("model", "gemma3:4b")}, caps)
+    model = payload.get("model", _VISION_DEFAULT)
+    result = _ollama_generate(
+        {"prompt": payload.get("prompt") or _OCR_PROMPT, "model": model, "image_base64": payload.get("image_base64")},
+        base_url=payload.get("base_url", "http://127.0.0.1:11434"),
+        client=client,
+    )
+    if result is None:
+        return {"ok": False, "note": "OCR backend unreachable", "model": model}
+    return result
 
 
-def _handle_barcode(payload: dict[str, Any], caps: CapabilityReport) -> dict[str, Any]:
+def _handle_barcode(payload: dict[str, Any], caps: CapabilityReport, client: httpx.Client | None = None) -> dict[str, Any]:
     if not caps.gpu:
         return {"ok": False, "note": "barcode decoding requires vision backend (colab)"}
-    return {"ok": False, "note": "barcode vision handler stub"}
+    return {"ok": False, "note": "barcode vision handler stub — dedicated decoder not wired"}
 
 
-def _handle_embeddings(payload: dict[str, Any], caps: CapabilityReport) -> dict[str, Any]:
+def _handle_embeddings(payload: dict[str, Any], caps: CapabilityReport, client: httpx.Client | None = None) -> dict[str, Any]:
     return {"ok": False, "note": "embedding service not yet wired"}
 
 

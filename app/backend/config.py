@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     colab_ollama_url: str = ""
     colab_approval_required: bool = True
     colab_request_timeout_seconds: int = 15
+    # How long a photo vision/OCR job waits for a Colab worker before the
+    # scan treats it as interrupted (no fabricated results).
+    colab_job_timeout_seconds: int = 60
 
     default_scan_mode: str = "local"
     hybrid_requires_explicit_approval: bool = True
