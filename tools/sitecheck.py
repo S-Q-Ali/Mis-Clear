@@ -43,12 +43,18 @@ class SiteSpec:
         self.error_status_codes = [int(c) for c in raw.get("error_status_codes", [])]
 
     def exists(self, status_code: int, body: str) -> bool | None:
-        """None = inconclusive."""
+        """None = inconclusive. GET: 404-class statuses mean absent; when the
+        site declares markers, ONLY a marker match may establish presence
+        (everything else is inconclusive, never a plain 200 guess)."""
         if self.method == "GET":
             if status_code in self.error_status_codes:
                 return False
-            if self.exists_marker:
-                return bool(re.search(self.exists_marker, body))
+            if self.exists_marker and re.search(self.exists_marker, body):
+                return True
+            if self.missing_marker and re.search(self.missing_marker, body):
+                return False
+            if self.exists_marker or self.missing_marker:
+                return None
             return status_code == 200
         if self.missing_marker and re.search(self.missing_marker, body):
             return False

@@ -1,13 +1,46 @@
 {
+  "source": "megadose/holehe (MIT) module shapes, live-verified September 2026",
+  "edition": "curated subset - only services whose account-existence check maps deterministically onto marker-based probes (single https request, stable JSON/text marker). Registration flows that need CSRF/captcha/multi-step are excluded (they would fail open and mislead).",
   "sites": [
     {
-      "name": "example-members",
+      "name": "Spotify",
       "mode": "email",
-      "method": "POST",
-      "probe_url": "https://example.test/members/check",
-      "form_field": "email",
-      "exists_marker": "is using this email address",
-      "missing_marker": "not registered"
+      "method": "GET",
+      "probe_url": "https://spclient.wg.spotify.com/signup/public/v1/account?validate=1&email={target}",
+      "exists_marker": "\"status\":\\s*20",
+      "missing_marker": "\"status\":\\s*1"
+    },
+    {
+      "name": "X.com (Twitter)",
+      "mode": "email",
+      "method": "GET",
+      "probe_url": "https://api.twitter.com/i/users/email_available.json?email={target}",
+      "exists_marker": "\"taken\":\\s*true",
+      "missing_marker": "\"taken\":\\s*false"
+    },
+    {
+      "name": "LastPass",
+      "mode": "email",
+      "method": "GET",
+      "probe_url": "https://lastpass.com/create_account.php?check=avail&skipcontent=1&mistype=1&username={target}",
+      "exists_marker": "^no$",
+      "missing_marker": "^(ok|emailinvalid)$"
+    },
+    {
+      "name": "Duolingo",
+      "mode": "email",
+      "method": "GET",
+      "probe_url": "https://www.duolingo.com/2017-06-30/users?email={target}",
+      "exists_marker": "\"users\":\\s*\\[{",
+      "missing_marker": "\"users\":\\s*\\[\\]"
+    },
+    {
+      "name": "WordPress.com",
+      "mode": "email",
+      "method": "GET",
+      "probe_url": "https://public-api.wordpress.com/rest/v1.1/users/email/exists?email={target}",
+      "exists_marker": "\"exists\":\\s*(true|1)",
+      "missing_marker": "\"exists\":\\s*(false|0)"
     }
   ]
 }

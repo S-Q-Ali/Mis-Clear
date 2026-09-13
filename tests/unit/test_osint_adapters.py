@@ -1,9 +1,9 @@
 """Phase 6: OSINT adapter unit tests. All transports are faked — zero real network."""
 
-import pytest
 import httpx
+import pytest
 
-from tools.base import ToolAdapter, ToolFinding, ToolResult
+from tools.base import ToolAdapter, ToolFinding
 from tools.email.holehe import HoleheAdapter
 from tools.sitecheck import SiteSpec, load_manifest
 from tools.username.sherlock import SherlockAdapter
@@ -34,7 +34,6 @@ def test_adapter_base_requires_contract():
 # ---------------- dns (DNS-over-HTTPS) ----------------
 
 def _dns_handler(request: httpx.Request) -> httpx.Response:
-    name = request.url.params.get("name")
     qtype = request.url.params.get("type")
     answers = {"A": [{"data": "93.184.216.34"}], "TXT": [{"data": 'v=spf1 -all'}]}.get(qtype, [])
     return httpx.Response(200, json={"Answer": answers})
@@ -182,7 +181,6 @@ _EMAIL_SITES = [
 
 
 def _email_handler(request: httpx.Request) -> httpx.Response:
-    email = request.url.params.get("target", "") or ""
     if "a.test" in request.url.host:
         return httpx.Response(200, text="This email not registered")
     return httpx.Response(200, text="A registered email is happy")
@@ -227,6 +225,55 @@ def test_load_manifest_sample_parses(tmp_path):
     assert specs and specs[0].name == "n"
 
 
+def test_get_probe_missing_marker_reports_absent():
+    spec = SiteSpec({
+        "name": "avail-api", "mode": "email", "method": "GET",
+        "probe_url": "https://a.test/api?email={target}",
+        "exists_marker": '"taken":\\s*true', "missing_marker": '"taken":\\s*false',
+    })
+    assert spec.exists(200, '{"taken": true}') is True
+    assert spec.exists(200, '{"taken": false}') is False
+    assert spec.exists(200, '{"error": "rate limited"}') is None
+
+
+def test_get_probe_missing_marker_swept_by_adapter():
+    a = HoleheAdapter(
+        manifest=[SiteSpec({
+            "name": "avail-api", "mode": "email", "method": "GET",
+            "probe_url": "https://a.test/api?email={target}",
+            "exists_marker": '"taken":\\s*true', "missing_marker": '"taken":\\s*false',
+        })],
+        client=make_client(lambda r: httpx.Response(200, json={"taken": False})),
+    )
+    res = a.run("who@example.com")
+    assert res.status == "completed"
+    assert res.findings == []
+    assert res.coverage["sources_checked"] == 1
+
+
+def test_shipped_manifests_are_safe_real_catalogs():
+    from app.backend.security.url_safety import formatted_url_matches, probe_url_safe
+    from tools.email.holehe import DEFAULT_MANIFEST as EMAIL_MANIFEST
+    from tools.username.sherlock import DEFAULT_MANIFEST as USERNAME_MANIFEST
+
+    email_specs = load_manifest(EMAIL_MANIFEST)
+    user_specs = load_manifest(USERNAME_MANIFEST)
+    assert email_specs, "email manifest must load"
+    assert user_specs, "username manifest must load"
+    assert len(user_specs) >= 100, "username catalog must be a real catalog, not a sample"
+    assert len(email_specs) >= 4, "email catalog must be a real catalog, not a sample"
+
+    for spec in email_specs + user_specs:
+        assert spec.mode in {"email", "username"}, f"{spec.name}: bad mode"
+        assert spec.probe_url.startswith("https://"), f"{spec.name}: probe must be https"
+        assert probe_url_safe(spec.probe_url) is None, f"{spec.name}: unsafe probe URL"
+        assert formatted_url_matches(spec.probe_url.format(target="alice"), spec.probe_url), (
+            f"{spec.name}: target substitution changed the host"
+        )
+    assert {s.name for s in email_specs} == {"Spotify", "X.com (Twitter)", "LastPass", "Duolingo", "WordPress.com"}
+    assert "YouTube" in {s.name for s in user_specs}
+
+
 # ---------------- registry ----------------
 
 def _fake_client_factory():
@@ -239,7 +286,7 @@ def test_registry_builds_default_set(tmp_path):
     um = tmp_path / "username.json"
     em.write_text(_json.dumps({"sites": [{"name": "e1", "mode": "email", "probe_url": "https://e/{target}"}]}))
     um.write_text(_json.dumps({"sites": [{"name": "u1", "mode": "username", "probe_url": "https://u/{target}"}]}))
-    from tools.registry import build_registry, adapters_for
+    from tools.registry import adapters_for, build_registry
     reg = build_registry(manifest_email=em, manifest_username=um, client_factory=_fake_client_factory)
     names = {a.name for a in reg}
     assert {"dns", "whois", "search", "github", "holehe", "sherlock"} <= names

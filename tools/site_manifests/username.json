@@ -1,12 +1,2310 @@
 {
+  "source": "https://github.com/sherlock-project/sherlock (MIT), data.json",
+  "edition": "curated subset - deterministic HTTP-status username presence checks (adult sites & subdomain-wildcard hosts excluded)",
   "sites": [
     {
-      "name": "example-profiles",
+      "name": "7Cups",
       "mode": "username",
       "method": "GET",
-      "probe_url": "https://example.test/users/{target}",
-      "exists_marker": "user-profile",
-      "error_status_codes": [404]
+      "probe_url": "https://www.7cups.com/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "9GAG",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.9gag.com/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "About.me",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://about.me/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Academia.edu",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://independent.academia.edu/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "addons.wago.io",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://addons.wago.io/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Airbit",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://airbit.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Airliners",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.airliners.net/user/{target}/profile/photos",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "akniga",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://akniga.org/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Apple Developer",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://developer.apple.com/forums/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Archive of Our Own",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://archiveofourown.org/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Arduino Forum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://forum.arduino.cc/u/{target}/summary",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Asciinema",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://asciinema.org/~{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Ask Fedora",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://ask.fedoraproject.org/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Atcoder",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://atcoder.jp/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Audiojungle",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://audiojungle.net/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Autofrage",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.autofrage.net/nutzer/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Bandcamp",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.bandcamp.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Behance",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.behance.net/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Bezuzyteczna",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://bezuzyteczna.pl/uzytkownicy/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "BiggerPockets",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.biggerpockets.com/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "BioHacking",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://forum.dangerousthings.com/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "BitBucket",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://bitbucket.org/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Bitwarden Forum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://community.bitwarden.com/u/{target}/summary",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Blipfoto",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.blipfoto.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Bookcrossing",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.bookcrossing.com/mybookshelf/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "BraveCommunity",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://community.brave.com/u/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "BugCrowd",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://bugcrowd.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "BuzzFeed",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://buzzfeed.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Caddy Community",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://caddy.community/u/{target}/summary",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Car Talk Community",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://community.cartalk.com/u/{target}/summary",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "CashApp",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://cash.app/${target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Cfx.re Forum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://forum.cfx.re/u/{target}/summary",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "CGTrader",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.cgtrader.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Championat",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.championat.com/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Chaos",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://chaos.social/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Choice Community",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://choice.community/u/{target}/summary",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Chollometro",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.chollometro.com/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Clapper",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://clapperapp.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "CloudflareCommunity",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://community.cloudflare.com/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Clubhouse",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.clubhouse.com/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "CNET",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.cnet.com/profiles/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Codeberg",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://codeberg.org/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Codepen",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://codepen.io/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Coderwall",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://coderwall.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Codewars",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.codewars.com/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Coinvote",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://coinvote.cc/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "ColourLovers",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.colourlovers.com/lover/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Coroflot",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.coroflot.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "couchsurfing",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.couchsurfing.com/people/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Credly",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.credly.com/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Crowdin",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://crowdin.com/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Cryptomator Forum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://community.cryptomator.org/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "CSSBattle",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://cssbattle.dev/player/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "CTAN",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://ctan.org/author/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "CurseForge",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.curseforge.com/members/{target}/projects",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "CyberDefenders",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://cyberdefenders.org/p/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "d3RU",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://d3.ru/user/{target}/posts",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "DailyMotion",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.dailymotion.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "dcinside",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://gallog.dcinside.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "DEV Community",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://dev.to/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Discogs",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.discogs.com/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Discuss.Elastic.co",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://discuss.elastic.co/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Disqus",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://disqus.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "drive2",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.drive2.ru/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "eGPU",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://egpu.io/forums/profile/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "eintracht",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://community.eintracht.de/fans/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Envato Forum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://forums.envato.com/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "exophase",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.exophase.com/user/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "EyeEm",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.eyeem.com/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "F3.cool",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://f3.cool/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Fameswap",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://fameswap.com/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Fandom",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.fandom.com/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Finanzfrage",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.finanzfrage.net/nutzer/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "fixya",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.fixya.com/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "fl",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.fl.ru/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Flickr",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.flickr.com/people/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Flightradar24",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://my.flightradar24.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Flipboard",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://flipboard.com/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "FortniteTracker",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://fortnitetracker.com/profile/all/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Fosstodon",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://fosstodon.org/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Framapiaf",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://framapiaf.org/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Freesound",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://freesound.org/people/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "GameFAQs",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://gamefaqs.gamespot.com/community/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Gamespot",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.gamespot.com/profile/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Genius (Artists)",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://genius.com/artists/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "geocaching",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.geocaching.com/p/default.aspx?u={target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Gesundheitsfrage",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.gesundheitsfrage.net/nutzer/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "GetMyUni",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.getmyuni.com/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Giant Bomb",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.giantbomb.com/profile/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Gitea",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://gitea.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Gitee",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://gitee.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "GitHub",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.github.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "GoodReads",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.goodreads.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Gradle",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://plugins.gradle.org/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Gutefrage",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.gutefrage.net/nutzer/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "habr",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://habr.com/ru/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Hackaday",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://hackaday.io/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "HackerEarth",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://hackerearth.com/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "HackerSploit",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://forum.hackersploit.org/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "HackMD",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://hackmd.io/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "hackster",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.hackster.io/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "HackTheBox",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://forum.hackthebox.com/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Harvard Scholar",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://scholar.harvard.edu/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Hashnode",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://hashnode.com/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "HotUKdeals",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.hotukdeals.com/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Houzz",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://houzz.com/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "HubPages",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://hubpages.com/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Hugging Face",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://huggingface.co/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Icons8 Community",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://community.icons8.com/u/{target}/summary",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "IFTTT",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.ifttt.com/p/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Ifunny",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://ifunny.co/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "ImgUp.cz",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://imgup.cz/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "imood",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.imood.com/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Instapaper",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.instapaper.com/p/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Ionic Forum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://forum.ionicframework.com/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "irecommend",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://irecommend.ru/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Issuu",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://issuu.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "jbzd.com.pl",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://jbzd.com.pl/uzytkownik/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Jellyfin Weblate",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://translate.jellyfin.org/user/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Joplin Forum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://discourse.joplinapp.org/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Kaggle",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.kaggle.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Keybase",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://keybase.io/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Kongregate",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.kongregate.com/accounts/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "kwork",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://kwork.ru/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Laracast",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://laracasts.com/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "last.fm",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://last.fm/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Launchpad",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://launchpad.net/~{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "leasehackr",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://forum.leasehackr.com/u/{target}/summary/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "LeetCode",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://leetcode.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Lichess",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://lichess.org/@/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "LinkedIn",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://linkedin.com/in/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "LinuxFR.org",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://linuxfr.org/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "livelib",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.livelib.ru/reader/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Lobsters",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://lobste.rs/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "LOR",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.linux.org.ru/people/{target}/profile",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "LottieFiles",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://lottiefiles.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Mamot",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://mamot.fr/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "mastodon.cloud",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://mastodon.cloud/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "mastodon.social",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://mastodon.social/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "mastodon.xyz",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://mastodon.xyz/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Memrise",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.memrise.com/user/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "mercadolivre",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.mercadolivre.com.br/perfil/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "MMORPG Forum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://forums.mmorpg.com/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "moikrug",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://moikrug.ru/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Motorradfrage",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.motorradfrage.net/nutzer/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "mstdn.io",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://mstdn.io/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "mstdn.social",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://mstdn.social/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "MuseScore",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://musescore.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "MyAnimeList",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://myanimelist.net/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Mydealz",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.mydealz.de/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "MyMiniFactory",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.myminifactory.com/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Myspace",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://myspace.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "n8n Community",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://community.n8n.io/u/{target}/summary",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "nairaland.com",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.nairaland.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "namuwiki",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://namu.wiki/w/%EC%82%AC%EC%9A%A9%EC%9E%90:{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Naver",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://blog.naver.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Needrom",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.needrom.com/author/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Nextcloud Forum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://help.nextcloud.com/u/{target}/summary",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "NintendoLife",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.nintendolife.com/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "note",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://note.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Nothing Community",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://nothing.community/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "npm",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.npmjs.com/~{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Nyaa.si",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://nyaa.si/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Open Collective",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://opencollective.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "OpenGameArt",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://opengameart.org/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Opensource",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://opensource.com/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "OpenStreetMap",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.openstreetmap.org/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "osu!",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://osu.ppy.sh/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Patreon",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.patreon.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "PentesterLab",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://pentesterlab.com/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Pepperdeals",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.pepperdeals.se/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "PepperealsUS",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.pepperdeals.com/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "PepperNL",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://nl.pepper.com/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "PepperPL",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.pepper.pl/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Periscope",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.periscope.tv/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "pikabu",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://pikabu.ru/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Pinkbike",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.pinkbike.com/u/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "pixelfed.social",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://pixelfed.social/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Platzi",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://platzi.com/p/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "PlayStore",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://play.google.com/store/apps/developer?id={target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Playstrategy",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://playstrategy.org/@/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Pokemon Showdown",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://pokemonshowdown.com/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Polygon",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.polygon.com/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Preisjaeger",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.preisjaeger.at/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "ProductHunt",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.producthunt.com/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Promodescuentos",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.promodescuentos.com/profile/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Pronouns.page",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://pronouns.page/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Rarible",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://rarible.com/marketplace/api/v4/urls/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Rate Your Music",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://rateyourmusic.com/~{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Rclone Forum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://forum.rclone.org/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Redbubble",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.redbubble.com/people/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Reisefrage",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.reisefrage.net/nutzer/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Replit.com",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://replit.com/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Roblox",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.roblox.com/user.aspx?username={target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "RubyGems",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://rubygems.org/profiles/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Rumble",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://rumble.com/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "satsisRU",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://satsis.info/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Sbazar.cz",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.sbazar.cz/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Scratch",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://scratch.mit.edu/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "SEOForum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://seoforum.com/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "sessionize",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://sessionize.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Shelf",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.shelf.im/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "ShitpostBot5000",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.shitpostbot.com/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Sketchfab",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://sketchfab.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Slant",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.slant.co/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Slides",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://slides.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Snapchat",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.snapchat.com/add/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "social.tchncs.de",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://social.tchncs.de/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "SoundCloud",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://soundcloud.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "SourceForge",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://sourceforge.net/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "SpeakerDeck",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://speakerdeck.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Speedrun.com",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://speedrun.com/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Spells8",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://forum.spells8.com/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "spletnik",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://spletnik.ru/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Splice",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://splice.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Splits.io",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://splits.io/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Sporcle",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.sporcle.com/user/{target}/people",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Sportlerfrage",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.sportlerfrage.net/nutzer/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "SportsRU",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.sports.ru/profile/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Spotify",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://open.spotify.com/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Strava",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.strava.com/athletes/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "SublimeForum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://forum.sublimetext.com/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "SWAPD",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://swapd.co/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Tellonym.me",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://tellonym.me/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Tenor",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://tenor.com/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "ThemeForest",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://themeforest.net/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "TheMovieDB",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.themoviedb.org/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Topmate",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://topmate.io/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "toster",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.toster.ru/user/{target}/answers",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "TradingView",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.tradingview.com/u/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Trakt",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.trakt.tv/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "TRAKTRAIN",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://traktrain.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "TrashboxRU",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://trashbox.ru/users/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Trawelling",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://traewelling.de/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Tuna",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://tuna.voicemod.net/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Tweakers",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://tweakers.net/gallery/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Ultimate-Guitar",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://ultimate-guitar.com/u/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Unsplash",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://unsplash.com/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Untappd",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://untappd.com/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Velog",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://velog.io/@{target}/posts",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Vimeo",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://vimeo.com/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Vjudge",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://VJudge.net/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "VLR",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.vlr.gg/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "VSCO",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://vsco.co/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Wakatime",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://wakatime.com/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Warrior Forum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.warriorforum.com/members/{target}.html",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Weblate",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://hosted.weblate.org/user/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "WICG Forum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://discourse.wicg.io/u/{target}/summary",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Windy",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://community.windy.com/user/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "WolframalphaForum",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://community.wolfram.com/web/{target}/home",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Wowhead",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://wowhead.com/user={target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "write.as",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://write.as/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "Wykop",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.wykop.pl/ludzie/{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "YouPic",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://youpic.com/photographer/{target}/",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "YouTube",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.youtube.com/@{target}",
+      "error_status_codes": [
+        404
+      ]
+    },
+    {
+      "name": "znanylekarz.pl",
+      "mode": "username",
+      "method": "GET",
+      "probe_url": "https://www.znanylekarz.pl/{target}",
+      "error_status_codes": [
+        404
+      ]
     }
   ]
 }
