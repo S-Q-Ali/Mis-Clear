@@ -54,6 +54,14 @@ def run_scan_endpoint(scan_id: int, body: ScanRunRequest | None = None, db: Sess
         raise api_error(404, "NOT_FOUND", f"Scan {scan_id} not found")
     run_scan(db, scan, tool_filter=body.tools if body and body.tools else None)
     updated = db.get(m.Scan, scan_id)
+    db.add(m.AuditLog(
+        actor="user",
+        action="run",
+        entity_type="scan",
+        entity_id=scan_id,
+        detail=f"{scan.target_type}:{scan.target_value} run completed",
+    ))
+    db.commit()
     return ScanOut.model_validate(updated)
 
 

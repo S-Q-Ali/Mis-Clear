@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
@@ -12,7 +10,6 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.backend import models as m
 from app.backend.database.engine import init_db_at
 from tools.base import ToolFinding, ToolResult
-
 
 # ---------- fake adapters ----------
 
@@ -56,7 +53,7 @@ def _fresh_session(tmp_path):
 
 
 def test_orchestrator_persists_results_and_coverage(tmp_path):
-    engine, session = _fresh_session(tmp_path)
+    _engine, session = _fresh_session(tmp_path)
     scan = m.Scan(target_type="email", target_value="alice@example.com", scan_mode="local")
     session.add(scan)
     session.commit()
@@ -87,7 +84,7 @@ def test_orchestrator_persists_results_and_coverage(tmp_path):
 
 
 def test_orchestrator_tool_filter_and_crash_isolation(tmp_path):
-    engine, session = _fresh_session(tmp_path)
+    _engine, session = _fresh_session(tmp_path)
     scan = m.Scan(target_type="email", target_value="bob@example.com")
     session.add(scan)
     session.commit()
@@ -108,7 +105,7 @@ def test_orchestrator_tool_filter_and_crash_isolation(tmp_path):
 
 
 def test_orchestrator_rejects_running_scan(tmp_path):
-    engine, session = _fresh_session(tmp_path)
+    _engine, session = _fresh_session(tmp_path)
     scan = m.Scan(target_type="email", target_value="x@example.com", status="running")
     session.add(scan)
     session.commit()
@@ -122,9 +119,9 @@ def test_orchestrator_rejects_running_scan(tmp_path):
 
 @pytest.fixture()
 def client(tmp_path, monkeypatch):
+    import app.backend.api.workers as wk
     import app.backend.config as cfg
     import app.backend.database.engine as eng
-    import app.backend.api.workers as wk
     import tools.registry as treg
 
     test_settings = cfg.Settings(
@@ -175,3 +172,18 @@ def test_run_endpoint_tool_filter(client):
 
 def test_run_endpoint_404_and_missing_scan(client):
     assert client.post("/api/scans/99999/run").status_code == 404
+
+
+def test_run_endpoint_writes_audit_log(client):
+    r = client.post("/api/scans", json={"targetType": "email", "targetValue": "eve@example.com"})
+    scan_id = r.json()["id"]
+    assert client.post(f"/api/scans/{scan_id}/run").status_code == 200
+
+    logs = client.get("/api/logs", params={"entityType": "scan", "entityId": scan_id}).json()
+    actions = {row["action"] for row in logs["data"]}
+    assert "create" in actions
+    assert "run" in actions, "scan run must be written to the audit log"
+
+    run_log = next(row for row in logs["data"] if row["action"] == "run")
+    assert run_log["actor"] == "user"
+    assert "eve@example.com" in run_log["detail"]
