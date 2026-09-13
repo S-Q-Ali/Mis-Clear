@@ -9,7 +9,10 @@ A manifest is a JSON list of `SiteSpec`:
       "form_field": str | null,        // email-mode POST form field name
       "exists_marker": str | null,     // substring (regex) pathmatched in the body
       "missing_marker": str | null,    // substring (regex) proving absence
-      "error_status_codes": [int]      // username-mode: statuses that mean 'absent'
+      "error_status_codes": [int],     // username-mode: statuses that mean 'absent'
+      "category": str | null,          // curated taxonomy: social|forum|data-broker|adult|legit|...
+      "removal_url": str | null,       // official removal/opt-out/takedown page (https, curated)
+      "removal_channel": str | null    // how removal happens: anonymous_form|email|account_delete|manual
     }
 
 Presence is reported as a `probable` finding (a third-party page implies the
@@ -41,6 +44,12 @@ class SiteSpec:
         self.exists_marker = raw.get("exists_marker")
         self.missing_marker = raw.get("missing_marker")
         self.error_status_codes = [int(c) for c in raw.get("error_status_codes", [])]
+        self.category = raw.get("category")
+        self.removal_url = raw.get("removal_url")
+        self.removal_channel = raw.get("removal_channel")
+
+    def __lt__(self, other: SiteSpec) -> bool:
+        return (self.name or "").lower() < (other.name or "").lower()
 
     def exists(self, status_code: int, body: str) -> bool | None:
         """None = inconclusive. GET: 404-class statuses mean absent; when the

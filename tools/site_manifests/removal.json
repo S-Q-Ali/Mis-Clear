@@ -1,0 +1,125 @@
+{
+  "source": "Privacy Guardian curated removal registry (Phase 16). Official, stable, public removal/opt-out/takedown pages. September 2026 edition.",
+  "edition": "Each entry pairs a domain with its official removal channel. `removal_channel` is one of: anonymous_form (machine-submittable no-login form), email (email a privacy/safety team), account_delete (requires login), manual (human on-page steps). Registry drives category-aware procedure selection and the per-finding removal executor. Never auto-submits without explicit per-finding human approval.",
+  "removals": [
+    {
+      "domain": "github.com",
+      "organization": "GitHub, Inc.",
+      "removal_url": "https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-github-user-account/managing-your-personal-account/deleting-your-personal-account",
+      "removal_channel": "account_delete",
+      "category": "dev"
+    },
+    {
+      "domain": "reddit.com",
+      "organization": "Reddit, Inc.",
+      "removal_url": "https://support.reddithelp.com/hc/en-us/articles/360043509051-How-do-I-delete-my-account",
+      "removal_channel": "account_delete",
+      "category": "forum"
+    },
+    {
+      "domain": "x.com",
+      "organization": "X Corp.",
+      "removal_url": "https://help.x.com/en/managing-your-account/how-to-deactivate-your-account",
+      "removal_channel": "account_delete",
+      "category": "social"
+    },
+    {
+      "domain": "facebook.com",
+      "organization": "Meta Platforms, Inc.",
+      "removal_url": "https://www.facebook.com/help/224562897555674",
+      "removal_channel": "account_delete",
+      "category": "social"
+    },
+    {
+      "domain": "instagram.com",
+      "organization": "Meta Platforms, Inc.",
+      "removal_url": "https://help.instagram.com/370452623149242",
+      "removal_channel": "account_delete",
+      "category": "social"
+    },
+    {
+      "domain": "linkedin.com",
+      "organization": "LinkedIn Corporation",
+      "removal_url": "https://www.linkedin.com/help/linkedin/answer/63",
+      "removal_channel": "account_delete",
+      "category": "professional"
+    },
+    {
+      "domain": "spotify.com",
+      "organization": "Spotify AB",
+      "removal_url": "https://support.spotify.com/us/article/close-your-spotify/",
+      "removal_channel": "account_delete",
+      "category": "legit"
+    },
+    {
+      "domain": "whitepages.com",
+      "organization": "Whitepages LLC",
+      "removal_url": "https://www.whitepages.com/suppression_requests",
+      "removal_channel": "anonymous_form",
+      "category": "data-broker"
+    },
+    {
+      "domain": "spokeo.com",
+      "organization": "Spokeo Inc.",
+      "removal_url": "https://www.spokeo.com/optout",
+      "removal_channel": "anonymous_form",
+      "category": "data-broker"
+    },
+    {
+      "domain": "beenverified.com",
+      "organization": "BeenVerified Inc.",
+      "removal_url": "https://www.beenverified.com/app/optout/search",
+      "removal_channel": "anonymous_form",
+      "category": "data-broker"
+    },
+    {
+      "domain": "truthfinder.com",
+      "organization": "TruthFinder LLC",
+      "removal_url": "https://www.truthfinder.com/opt-out/",
+      "removal_channel": "anonymous_form",
+      "category": "data-broker"
+    },
+    {
+      "domain": "instantcheckmate.com",
+      "organization": "Instant Checkmate LLC",
+      "removal_url": "https://www.instantcheckmate.com/opt-out/",
+      "removal_channel": "anonymous_form",
+      "category": "data-broker"
+    },
+    {
+      "domain": "radaris.com",
+      "organization": "Radaris, LLC",
+      "removal_url": "https://radaris.com/page/how-to-remove/",
+      "removal_channel": "anonymous_form",
+      "category": "data-broker"
+    },
+    {
+      "domain": "peoplefinder.com",
+      "organization": "PeopleFinders LLC",
+      "removal_url": "https://www.peoplefinders.com/manage/listing",
+      "removal_channel": "anonymous_form",
+      "category": "data-broker"
+    },
+    {
+      "domain": "intelius.com",
+      "organization": "Intelius LLC",
+      "removal_url": "https://www.intelius.com/opt-out/",
+      "removal_channel": "anonymous_form",
+      "category": "data-broker"
+    },
+    {
+      "domain": "mylife.com",
+      "organization": "MyLife.com Inc.",
+      "removal_url": "https://www.mylife.com/optout",
+      "removal_channel": "anonymous_form",
+      "category": "data-broker"
+    },
+    {
+      "domain": "peekyou.com",
+      "organization": "PeekYou LLC",
+      "removal_url": "https://www.peekyou.com/about/contact/optout/",
+      "removal_channel": "anonymous_form",
+      "category": "data-broker"
+    }
+  ]
+}

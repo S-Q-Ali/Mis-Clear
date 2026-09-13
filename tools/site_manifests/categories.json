@@ -1,0 +1,37 @@
+{
+  "source": "Privacy Guardian curated domain taxonomy for deterministic site advisory (Phase 16). Updated September 2026.",
+  "edition": "category = {recommended: bool|null, rationale: string}. null recommended means unknown (never guessed). Categories drive removal-procedure selection and the per-finding site-advisory badge. Domains are registrable-base keys; subdomains resolve by suffix.",
+  "categories": {
+    "social": "social platform - personal profile + content hosting",
+    "forum": "discussion forum / community - user-generated posts",
+    "data-broker": "people-search / background-check aggregator - sells aggregated personal data, opt-out required",
+    "adult": "adult / NSFW content platform - content takedown channel required",
+    "professional": "professional networking / employment",
+    "legit": "trusted mainstream service",
+    "dev": "developer / software platform",
+    "commerce": "e-commerce / marketplace"
+  },
+  "domains": {
+    "spotify.com": {"category": "legit", "recommended": true, "rationale": "Official music streaming platform with a standard account deletion flow."},
+    "x.com": {"category": "social", "recommended": true, "rationale": "Mainstream social platform with standard account management."},
+    "twitter.com": {"category": "social", "recommended": true, "rationale": "Mainstream social platform (X Corp.)."},
+    "lastpass.com": {"category": "legit", "recommended": true, "rationale": "Password manager with official account closure flow."},
+    "duolingo.com": {"category": "legit", "recommended": true, "rationale": "Language learning service with standard deletion flow."},
+    "wordpress.com": {"category": "legit", "recommended": true, "rationale": "Official managed WordPress hosting; standard account deletion."},
+    "github.com": {"category": "dev", "recommended": true, "rationale": "Official software hosting platform with a documented account deletion page."},
+    "reddit.com": {"category": "forum", "recommended": true, "rationale": "Mainstream discussion platform with documented deactivation flow."},
+    "facebook.com": {"category": "social", "recommended": true, "rationale": "Meta platform with documented account deletion flow."},
+    "instagram.com": {"category": "social", "recommended": true, "rationale": "Meta platform with documented account deletion flow."},
+    "linkedin.com": {"category": "professional", "recommended": true, "rationale": "Professional networking with documented account closure."},
+    "whitepages.com": {"category": "data-broker", "recommended": false, "rationale": "People-search aggregator; data removal requires opt-out and can be slow."},
+    "spokeo.com": {"category": "data-broker", "recommended": false, "rationale": "People-search aggregator selling aggregated personal data; opt-out required."},
+    "beenverified.com": {"category": "data-broker", "recommended": false, "rationale": "Background-check aggregator; data removal via opt-out flow."},
+    "truthfinder.com": {"category": "data-broker", "recommended": false, "rationale": "Background-check aggregator; data removal via opt-out flow."},
+    "instantcheckmate.com": {"category": "data-broker", "recommended": false, "rationale": "People-search aggregator; opt-out flow for data removal."},
+    "radaris.com": {"category": "data-broker", "recommended": false, "rationale": "People-search aggregator; automated opt-out available."},
+    "peoplefinder.com": {"category": "data-broker", "recommended": false, "rationale": "People-search aggregator; opt-out flow available."},
+    "intelius.com": {"category": "data-broker", "recommended": false, "rationale": "People-search aggregator; opt-out flow available."},
+    "mylife.com": {"category": "data-broker", "recommended": false, "rationale": "People-search/profile aggregator; opt-out and suppression required."},
+    "peekyou.com": {"category": "data-broker", "recommended": false, "rationale": "People-search aggregator; data removal via opt-out request."}
+  }
+}

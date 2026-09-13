@@ -1,6 +1,6 @@
 {
   "source": "megadose/holehe (MIT) module shapes, live-verified September 2026",
-  "edition": "curated subset - only services whose account-existence check maps deterministically onto marker-based probes (single https request, stable JSON/text marker). Registration flows that need CSRF/captcha/multi-step are excluded (they would fail open and mislead).",
+  "edition": "curated subset - only services whose account-existence check maps deterministically onto marker-based probes (single https request, stable JSON/text marker). Registration flows that need CSRF/captcha/multi-step are excluded (they would fail open and mislead). category + removal_url metadata drive site advisory and the per-finding removal executor (Phase 16).",
   "sites": [
     {
       "name": "Spotify",
@@ -8,7 +8,10 @@
       "method": "GET",
       "probe_url": "https://spclient.wg.spotify.com/signup/public/v1/account?validate=1&email={target}",
       "exists_marker": "\"status\":\\s*20",
-      "missing_marker": "\"status\":\\s*1"
+      "missing_marker": "\"status\":\\s*1",
+      "category": "legit",
+      "removal_url": "https://support.spotify.com/us/article/close-your-spotify/",
+      "removal_channel": "account_delete"
     },
     {
       "name": "X.com (Twitter)",
@@ -16,7 +19,10 @@
       "method": "GET",
       "probe_url": "https://api.twitter.com/i/users/email_available.json?email={target}",
       "exists_marker": "\"taken\":\\s*true",
-      "missing_marker": "\"taken\":\\s*false"
+      "missing_marker": "\"taken\":\\s*false",
+      "category": "social",
+      "removal_url": "https://help.x.com/en/managing-your-account/how-to-deactivate-your-account",
+      "removal_channel": "account_delete"
     },
     {
       "name": "LastPass",
@@ -24,7 +30,10 @@
       "method": "GET",
       "probe_url": "https://lastpass.com/create_account.php?check=avail&skipcontent=1&mistype=1&username={target}",
       "exists_marker": "^no$",
-      "missing_marker": "^(ok|emailinvalid)$"
+      "missing_marker": "^(ok|emailinvalid)$",
+      "category": "legit",
+      "removal_url": "https://support.lastpass.com/help/lastpass-account-recovery-and-closure-faq",
+      "removal_channel": "manual"
     },
     {
       "name": "Duolingo",
@@ -32,7 +41,10 @@
       "method": "GET",
       "probe_url": "https://www.duolingo.com/2017-06-30/users?email={target}",
       "exists_marker": "\"users\":\\s*\\[{",
-      "missing_marker": "\"users\":\\s*\\[\\]"
+      "missing_marker": "\"users\":\\s*\\[\\]",
+      "category": "legit",
+      "removal_url": "https://support.duolingo.com/hc/en-us/articles/13398552592781-Account-Data-and-Options",
+      "removal_channel": "manual"
     },
     {
       "name": "WordPress.com",
@@ -40,7 +52,10 @@
       "method": "GET",
       "probe_url": "https://public-api.wordpress.com/rest/v1.1/users/email/exists?email={target}",
       "exists_marker": "\"exists\":\\s*(true|1)",
-      "missing_marker": "\"exists\":\\s*(false|0)"
+      "missing_marker": "\"exists\":\\s*(false|0)",
+      "category": "legit",
+      "removal_url": "https://wordpress.com/support/close-account/",
+      "removal_channel": "account_delete"
     }
   ]
 }
