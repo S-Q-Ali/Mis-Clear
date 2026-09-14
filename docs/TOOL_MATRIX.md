@@ -23,6 +23,9 @@ run(target) -> ToolResult
 | Pillow | image load/EXIF/dhash | `tools/photo/base.py` | ✅ Phase 7 |
 | Tesseract | OCR | exported as `ocr` job → Colab worker via `app/backend/services/vision_transport.py` (image travels as base64 in the job payload; `colab/handlers.py` `_handle_ocr`) | ✅ Phase 15 wiring |
 | pHash | perceptual hashing | `tools/photo/phash.py` (d-hash) | ✅ Phase 7 |
+| NSFW detector | NSFW/sensitive image classification | `tools/photo/nsfw.py` → `nsfw_analysis` Colab job (`colab/handlers.py` `_handle_nsfw`) | ✅ Phase 16 (hybrid‑first, strict‑local honest‑blocked) |
+| Removal registry | official takedown/removal records | `app/backend/services/removal_registry.py` + curated `tools/site_manifests/removal.json` | ✅ Phase 16 (real, stable official URLs; unknown → `known=False`) |
+| Removal executor | per‑finding/channel removal ladder | `app/backend/services/removal_executor.py` (human‑gate, re‑verify, escalation, `action_executions`) | ✅ Phase 16 |
 | Ollama Qwen | local reasoning | `app/backend/services/model_router.py` | ✅ router code (backend optional) |
 | Ollama Qwen-VL/Gemma | local vision | same | ✅ router code (backend optional) |
 | Colab worker | heavy vision/OCR/embeddings | `colab/` (capabilities, handlers, worker lifecycle, notebook incl. Ollama setup); dispatch bind via `app/backend/services/job_dispatcher.py` + direct protocol `GET /api/jobs/next`, `POST /api/jobs/{job_id}/result` | ✅ Phase 8 (+ protocol E2E) |

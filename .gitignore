@@ -26,6 +26,8 @@ site-packages/
 blocklist.txt
 config.json
 data/database/*.db
+data/database/*.db-shm
+data/database/*.db-wal
 data/database/*.sqlite3
 data/evidence/*
 data/reports/*

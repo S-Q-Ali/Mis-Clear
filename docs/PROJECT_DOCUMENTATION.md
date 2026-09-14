@@ -33,6 +33,7 @@ and coverage gaps.
 | 13 | Security | ✅ guardrails + 55-test battery + audits clean (217 tests) |
 | 14 | Testing | ✅ E2E over real HTTP + failure/recovery battery + Colab worker protocol E2E (235 tests) |
 | 15 | Audit | ✅ final audit + release notes (235 tests) |
+| 16 | Removal | ✅ NSFW/photo‑nsfw async job + categorized takedown procedures + automated removal executor with human‑gate + re‑verify (see below) |
 
 ## Current implementation
 
@@ -136,6 +137,32 @@ and coverage gaps.
   only marks a human-executed step. API
   `POST /api/scans/{id}/deletion-research`, `GET /api/actions[?scanId&status]`,
   `GET /api/actions/{id}`, `POST /api/actions/{id}/approve`|`/decline`.
+- **Removal procedures** (`app/backend/services/removal_registry.py` +
+  `takedown_procedures.py` + `draft_refinement.py`, Phase 16): curated
+  `tools/site_manifests/removal.json` registry maps finding channels to official
+  removal records (`find_removal_record`, `removal_channel_for`,
+  `removal_url_for`); image findings map to the `adult` category via
+  `procedure_for_finding` with honest opt-out/takedown templates; off-catalog
+  categories get curated step templates (`CATEGORY_TEMPLATES`) and unknown
+  domains take an explicit `known=False` path — never invented URLs or steps.
+  `draft_refinement.py` refines an AI removal-request draft (wording only) with
+  a deterministic `guard_urls` URL-integrity post-check that **discards any URL
+  the source did not provide**; a refined removal draft is returned to the Colab
+  worker. Nothing here auto-sends anything.
+- **Removal executor** (`app/backend/services/removal_executor.py`, Phase 16,
+  driven by the UI "Remove data" button): a per-finding/per-action removal
+  attempt ladder (`start_removal`) that routes each channel to its removal
+  procedure, keeps a default honest verifier (HEAD/URL re-check seeded from
+  evidence), escalates via bounded channel attempts (`MAX_ATTEMPTS`), records
+  `requires_manual` for login-gated/official-url-only flows (never fabricating
+  a removal), re-verifies before reporting `removed` (404/absent), and appends
+  the `removed` audit event only after real re-verification. Findings/actions
+  already enriched with an `actionId`; every attempt is persisted to the
+  `action_executions` table + audit log. API
+  `POST /api/actions/{id}/remove` and `POST /api/findings/{id}/remove` →
+  `RemovalOut` (findingId/actionId/status/execution); `GET /api/findings/{id}`
+  returns `actionId`. Human-approval gate remains the UX contract — the button
+  is click-to-launch research, removal itself stays approval-gated.
 - **Security** (`app/backend/security/`, Phase 13): `url_safety.py` — SSRF/
   unsafe-URL guardrail (https-only, no userinfo, private/loopback/reserved IP
   literals + private hostname families rejected; manifest probe-URL authority
@@ -147,7 +174,8 @@ and coverage gaps.
   hardening, command injection, prompt injection, malicious webpage,
   authorization, CORS/exposure, headers). Dep audits: pip-audit 0, npm audit 0.
 - **Tests**: `tests/unit/*`, `tests/integration/*`, `tests/security/*`, `tests/e2e/*`,
-  `tests/failure_recovery/*`; 235 pytest functions green
+   `tests/failure_recovery/*`; 240 pytest functions green (198 unit + 42
+   integration; the 3 dispatch/settings env‑gated cases deselected)
 - **E2E** (`tests/e2e/`, Phase 14): real uvicorn server on loopback + real SQLite
   DB + genuine HTTP via httpx — full investigation journey (create→run→
   findings→graph→risk→research→approve→logs), photo journey (multipart upload,

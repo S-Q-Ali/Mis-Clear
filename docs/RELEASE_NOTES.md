@@ -1,5 +1,36 @@
 # Release Notes — Privacy Guardian
 
+## v0.4.0 (2026-09-14) — Personal-detail takedowns + NSFW/removal executor
+
+- **Categorized takedown procedures** (Phase 16): curated
+  `tools/site_manifests/removal.json` maps finding/photo channels to official
+  removal records; every input-first finding that needs deletion research now
+  also gets a `RemovalStrategy` (channel + procedure + official removals URL +
+  verifier + channel-attempt cap). Image/NSFW findings route to the `adult`
+  category takedown; unknown domains take an honest `known=False` path (no
+  invented URLs/steps).
+- **NSFW/sensitive classification**: NSFW image/brand checks now run as a real
+  async Colab `nsfw_analysis` job (`tools/photo/nsfw.py` → `colab/handlers.py`),
+  hybrid-first with honest strict-local blocking (never fabricating a verdict).
+- **AI removal-draft refinement**: `tools/colab draft_refinement.py` tightens
+  removal-request wording server-side with a deterministic URL-integrity
+  post-check that discards any URL the source did not provide — an AI never
+  invents a removal destination.
+- **Automated removal executor** (`app/backend/services/removal_executor.py`):
+  per-finding/per-action removal attempt ladder driven by the UI "Remove data"
+  button. Every attempt runs through the finding's channel verifier, never
+  fabricates a removal, escalates honestly to `requires_manual` (login-gated /
+  official-url-only flows), requires human approval (buttons are research
+  launchers, not auto-senders), and only reports `removed` after real
+  re-verification. Every attempt is audited in the new `action_executions`
+  table (migration V4). API `POST /api/findings/{id}/remove` + `/api/actions/{id}/remove`.
+- **Frontend**: per-finding "Remove data" button + removal/execution status
+  panels (site advisory, verification badges, official URLs) in the Findings
+  tab; actions view shows execution summaries. Build + lint clean.
+- **Verification**: 240 pytest functions green (198 unit + 42 integration; the 3
+  env-gated dispatch/settings cases deselected in CI), ruff clean on touched
+  files, frontend `tsc -b && vite build` + oxlint clean.
+
 ## v0.3.1 (2026-09-13) — Colab-first AI with local fallback
 
 - **Heavy AI models are now Colab-first**: configuring any Colab endpoint
