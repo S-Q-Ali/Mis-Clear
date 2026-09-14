@@ -27,6 +27,14 @@ _OCR_PROMPT = (
     "Transcribe all visible text in this image verbatim, preserving order. "
     "If no text is visible, reply exactly: NO_TEXT."
 )
+_NSFW_PROMPT = (
+    "You are a content-safety classifier, not an analyst. Classify the single "
+    "image before you. Reply with exactly one JSON object, no prose:\n"
+    '{"nsfw": bool, "category": "benign" | "adult" | "nudity" | "explicit" | '
+    '"violence" | "gore", "confidence": float, "note": "one short honest sentence"}.\n'
+    "Judge only what is actually visible. If nothing explicit is present, "
+    "nsfw must be false and category 'benign'. Do not invent content."
+)
 
 
 def register_handler(job_type: str, fn: HandlerFn) -> None:
@@ -104,6 +112,26 @@ def _handle_barcode(payload: dict[str, Any], caps: CapabilityReport, client: htt
     return {"ok": False, "note": "barcode vision handler stub — dedicated decoder not wired"}
 
 
+def _handle_nsfw(payload: dict[str, Any], caps: CapabilityReport, client: httpx.Client | None = None) -> dict[str, Any]:
+    """Content-safety classification (Phase 16). Wording-only, never fabricated:
+    classification is whatever the vision model returned, surfaced verbatim."""
+    model = payload.get("model") or _VISION_DEFAULT
+    if not caps.gpu and model not in caps.models:
+        return {"ok": False, "note": "no NSFW-capable vision backend available", "model": model}
+    result = _ollama_generate(
+        {
+            "prompt": payload.get("prompt") or _NSFW_PROMPT,
+            "model": model,
+            "image_base64": payload.get("image_base64"),
+        },
+        base_url=payload.get("base_url", "http://127.0.0.1:11434"),
+        client=client,
+    )
+    if result is None:
+        return {"ok": False, "note": "NSFW classification backend unreachable", "model": model}
+    return result
+
+
 def _handle_embeddings(payload: dict[str, Any], caps: CapabilityReport, client: httpx.Client | None = None) -> dict[str, Any]:
     return {"ok": False, "note": "embedding service not yet wired"}
 
@@ -113,3 +141,4 @@ register_handler("vision_analysis", _handle_vision)
 register_handler("ocr", _handle_ocr)
 register_handler("barcode", _handle_barcode)
 register_handler("embeddings", _handle_embeddings)
+register_handler("nsfw_analysis", _handle_nsfw)

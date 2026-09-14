@@ -10,6 +10,7 @@ from app.backend.services.model_router import ModelRouter
 from tools.base import ToolAdapter
 from tools.photo.exif import ExifAdapter
 from tools.photo.hash import PhotoHashAdapter
+from tools.photo.nsfw import NsfwAdapter
 from tools.photo.phash import PerceptualHashAdapter
 from tools.photo.qr import QrAdapter
 from tools.photo.reverse_search import ReverseImageSearchAdapter
@@ -26,6 +27,7 @@ def photo_pipeline(
         ExifAdapter(),
         QrAdapter(),
         VisionAdapter(router=router, strict_local=strict_local),
+        NsfwAdapter(strict_local=strict_local),
     ]
     if not strict_local:
         adapters.append(ReverseImageSearchAdapter(allowed=True))

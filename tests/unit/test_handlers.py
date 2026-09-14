@@ -26,8 +26,25 @@ def test_registry_register_and_get():
 
 
 def test_builtin_job_types_registered():
-    for name in ("reasoning", "vision_analysis", "ocr", "barcode", "embeddings"):
+    for name in ("reasoning", "vision_analysis", "ocr", "barcode", "embeddings", "nsfw_analysis"):
         assert get_handler(name) is not None
+
+
+def test_nsfw_degrades_without_gpu_and_model():
+    res = get_handler("nsfw_analysis")({"prompt": "x"}, _caps(gpu=False))
+    assert res["ok"] is False and "backend" in res["note"]
+    # no GPU *and* no known model → honest "no backend"; never fabricated result
+    res2 = get_handler("nsfw_analysis")({"prompt": "x"}, _caps(gpu=False))
+    assert res2["ok"] is False and "no NSFW-capable vision backend" in res2["note"]
+
+
+def test_nsfw_surfaces_model_output_verbatim(monkeypatch):
+    def fake(payload, **kw):
+        return {"ok": True, "text": '{"nsfw": true, "category": "benign", "confidence": 0.9, "note": "x"}'}
+
+    monkeypatch.setattr("colab.handlers._ollama_generate", fake)
+    res = get_handler("nsfw_analysis")({"prompt": ""}, _caps(gpu=True, models=["gemma3:4b"]))
+    assert res["ok"] is True and "nsfw" in res["text"]
 
 
 def _caps(gpu: bool = False, models=None):
