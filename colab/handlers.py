@@ -132,6 +132,36 @@ def _handle_nsfw(payload: dict[str, Any], caps: CapabilityReport, client: httpx.
     return result
 
 
+_REMOVAL_DRAFT_PROMPT = (
+    "You are refining a personal-data removal request DRAFT that a privacy "
+    "assistant prepared. Rewrite it for clarity and professionalism. Hard rules:\n"
+    "1. Keep every factual detail identical: the organization, URLs, dates, "
+    "reference numbers, and the exact request being made.\n"
+    "2. Do NOT add new URLs, new steps, invented facts, legal threats, or new "
+    "organizations.\n"
+    "3. Keep the final disclaimer line verbatim.\n"
+    "Return only the rewritten draft.\n\n"
+    "DRAFT:\n{text}"
+)
+
+
+def _handle_removal_draft(payload: dict[str, Any], caps: CapabilityReport, client: httpx.Client | None = None) -> dict[str, Any]:
+    """Wording-only DRAFT refinement (Phase 16, slice 5). No new facts/URLs/steps;
+    the laptop additionally post-checks URLs deterministically before storing."""
+    text = (payload.get("text") or payload.get("draft") or "").strip()
+    if not text:
+        return {"ok": False, "note": "empty draft text supplied"}
+    prompt = payload.get("prompt") or _REMOVAL_DRAFT_PROMPT.format(text=text)
+    result = _ollama_generate(
+        {"prompt": prompt, "model": payload.get("model") or "qwen3:8b"},
+        base_url=payload.get("base_url", "http://127.0.0.1:11434"),
+        client=client,
+    )
+    if result is None:
+        return {"ok": False, "note": "draft-refinement backend unreachable"}
+    return result
+
+
 def _handle_embeddings(payload: dict[str, Any], caps: CapabilityReport, client: httpx.Client | None = None) -> dict[str, Any]:
     return {"ok": False, "note": "embedding service not yet wired"}
 
@@ -142,3 +172,4 @@ register_handler("ocr", _handle_ocr)
 register_handler("barcode", _handle_barcode)
 register_handler("embeddings", _handle_embeddings)
 register_handler("nsfw_analysis", _handle_nsfw)
+register_handler("removal_draft", _handle_removal_draft)

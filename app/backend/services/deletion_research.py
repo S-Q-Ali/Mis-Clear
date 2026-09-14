@@ -19,7 +19,9 @@ from sqlalchemy import select
 
 from app.backend import models as m
 from app.backend.models import _utcnow
+from app.backend.services.removal_registry import removal_channel_for
 from app.backend.services.site_advisory import advisory_for
+from app.backend.services.takedown_procedures import procedure_for_finding
 
 CANDIDATE_CONFIDENCE = {"confirmed", "probable"}
 CANDIDATE_SEVERITY = {"critical", "high", "medium"}
@@ -153,6 +155,16 @@ def find_procedure(finding: m.Finding) -> Procedure:
     known = DELETION_PROCEDURES.get(domain)
     if known:
         return known
+    selected = procedure_for_finding(finding.url, finding_type=finding.type)
+    if selected.known:
+        return Procedure(
+            domain=selected.domain,
+            organization=selected.organization,
+            procedure_url=selected.procedure_url,
+            steps=list(selected.steps),
+            known=True,
+            extra={"category": selected.category, "removal_channel": selected.removal_channel},
+        )
     return Procedure(
         domain=domain or "unknown",
         organization=(hostname or "unknown").lower(),
@@ -193,6 +205,7 @@ def research_finding(db, finding: m.Finding) -> m.PrivacyAction:
 
     proc = find_procedure(finding)
     adv = advisory_for(finding.url)
+    channel = removal_channel_for(finding.url)
     steps = "\n".join(f"- {s}" for s in proc.steps)
     site_advisory_line = (
         f"Site advisory: {adv['category']} "
@@ -202,6 +215,7 @@ def research_finding(db, finding: m.Finding) -> m.PrivacyAction:
     instruction_text = (
         f"Official organization: {proc.organization}\n"
         f"Procedure URL: {proc.procedure_url or 'not on file (verify manually)'}\n"
+        f"Removal channel: {channel}\n"
         f"{site_advisory_line}"
         f"Steps:\n{steps}\n\nRequest draft:\n{prepare_request(finding, proc)}"
     )
