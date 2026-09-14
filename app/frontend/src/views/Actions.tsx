@@ -65,7 +65,26 @@ export default function Actions() {
                       <button className="btn btn-sm btn-danger" disabled={busyId === a.id} onClick={() => void transition(a.id, api.declineAction)}>Decline</button>
                     </>
                   )}
+                  {(a.status === 'pending' || a.status === 'approved') && (
+                    <button className="btn btn-sm" disabled={busyId === a.id}
+                      onClick={() => void transition(a.id, api.removeAction)}>Remove data</button>
+                  )}
                 </div>
+                {a.siteAdvisory && (
+                  <p><strong>Site advisory:</strong> {a.siteAdvisory.category}
+                    <span className="muted"> · recommended={a.siteAdvisory.recommended === null ? 'unknown' : String(a.siteAdvisory.recommended)}</span>
+                    <span className="muted"> — {a.siteAdvisory.rationale}</span>
+                  </p>
+                )}
+                {a.execution && (
+                  <div className="removal-panel">
+                    <Badge status={a.execution.status === 'removed' ? 'completed' : (a.execution.status ?? 'pending')} label={a.execution.status ?? '—'} />
+                    {a.execution.channel && <span className="muted"> · channel {a.execution.channel}</span>}
+                    {a.execution.verificationDetail && <span className="muted"> · verification: {a.execution.verificationDetail}</span>}
+                    {a.execution.verifiedAt && <span className="muted"> · verified {fmtTime(a.execution.verifiedAt)}</span>}
+                    {a.execution.note && <p className="muted">{a.execution.note}</p>}
+                  </div>
+                )}
                 {a.deletionUrl && <p><strong>Official procedure:</strong> <a href={a.deletionUrl} target="_blank" rel="noreferrer noopener">{a.deletionUrl}</a></p>}
                 {a.instructions && <pre className="pre block">{a.instructions}</pre>}
                 <p className="muted">Reference {a.evidenceReference ?? '—'} · created {fmtTime(a.createdAt)}{a.approvedAt ? ` · approved ${fmtTime(a.approvedAt)}` : ''}</p>

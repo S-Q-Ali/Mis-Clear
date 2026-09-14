@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../api'
-import type { Finding, Graph, ImageDetails, Scan, ScanRisk, ToolRun } from '../types'
+import type { Finding, Graph, ImageDetails, PrivacyAction, Scan, ScanRisk, ToolRun } from '../types'
 import { fmtTime } from '../format'
 import { Badge, Empty, ErrorBanner, Spinner } from '../ui'
 
@@ -193,9 +193,34 @@ function Overview({ scan, runs, risk, running, onRun, onResearch }: {
 }
 
 function Findings({ findings }: { findings: Finding[] }) {
+  const [removing, setRemoving] = useState<number | null>(null)
+  const [results, setResults] = useState<Record<number, RemovalOutcome>>({})
+  const [error, setError] = useState('')
+
   if (!findings.length) return <Empty>No findings yet.</Empty>
+
+  const onRemove = async (f: Finding) => {
+    if (f.actionId == null) {
+      setError(`No removal action has been researched for finding ${f.id} yet. Run "Deletion research" first.`)
+      return
+    }
+    setRemoving(f.id)
+    setError('')
+    try {
+      // removeAction returns the enriched action with execution status; removeFinding is the
+      // per-finding button. Prefer the action route for full execution detail.
+      const action = await api.removeAction(f.actionId)
+      setResults((prev) => ({ ...prev, [f.id]: { action, message: '', error: '' } }))
+    } catch (e) {
+      setResults((prev) => ({ ...prev, [f.id]: { action: null, message: '', error: (e as Error).message } }))
+    } finally {
+      setRemoving(null)
+    }
+  }
+
   return (
     <div className="findings">
+      {error && <ErrorBanner message={error} />}
       {findings.map((f) => (
         <details key={f.id} className="finding">
           <summary>
@@ -208,9 +233,50 @@ function Findings({ findings }: { findings: Finding[] }) {
             {f.url && <p><strong>URL:</strong> <a href={f.url} target="_blank" rel="noreferrer noopener">{f.url}</a></p>}
             <p><strong>Evidence:</strong> <span className="cell-mono">{f.evidence || '—'}</span></p>
             <p className="muted">Found {fmtTime(f.timestamp)} · status {f.status} · {f.type}</p>
+            <div className="actions-row">
+              <button
+                className="btn btn-sm"
+                disabled={removing === f.id}
+                onClick={() => void onRemove(f)}
+              >
+                {removing === f.id ? 'Working…' : 'Remove data'}
+              </button>
+              {(() => { const act = results[f.id]?.action; return act ? <RemovalPanel outcome={act} /> : null })()}
+              {results[f.id]?.error && <ErrorBanner message={results[f.id].error} />}
+              {results[f.id]?.message && <span className="muted">{results[f.id].message}</span>}
+            </div>
           </div>
         </details>
       ))}
+    </div>
+  )
+}
+
+interface RemovalOutcome {
+  action: PrivacyAction | null
+  message: string
+  error: string
+}
+
+function RemovalPanel({ outcome }: { outcome: PrivacyAction }) {
+  const ex = outcome.execution
+  const adv = outcome.siteAdvisory
+  if (ex) {
+    return (
+      <div className="removal-panel">
+        <Badge status={ex.status === 'removed' ? 'completed' : (ex.status ?? 'pending')} label={`${ex.channel ?? ''} · ${ex.status ?? ''}`} />
+        {ex.verificationDetail && <div><strong>Verification:</strong> {ex.verificationDetail}</div>}
+        {ex.verifiedAt && <div className="muted">Verified {fmtTime(ex.verifiedAt)}</div>}
+        {ex.note && <div className="muted">{ex.note}</div>}
+        {outcome.deletionUrl && <div><a href={outcome.deletionUrl} target="_blank" rel="noreferrer noopener">{outcome.deletionUrl}</a></div>}
+      </div>
+    )
+  }
+  return (
+    <div className="removal-panel">
+      {adv && <div><Badge status={adv.recommended ? 'completed' : 'declined'} label={`site: ${adv.category}`} /><span className="muted"> {adv.rationale}</span></div>}
+      {outcome.instructions && <pre className="cell-mono draft">{outcome.instructions}</pre>}
+      {outcome.deletionUrl && <div><a href={outcome.deletionUrl} target="_blank" rel="noreferrer noopener">{outcome.deletionUrl}</a></div>}
     </div>
   )
 }

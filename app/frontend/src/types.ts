@@ -2,6 +2,7 @@ export type Confidence = 'confirmed' | 'probable' | 'possible' | 'weak' | 'false
 export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'informational'
 export type ScanStatus = 'pending' | 'running' | 'completed' | 'failed' | 'interrupted'
 export type ActionStatus = 'pending' | 'approved' | 'declined' | 'completed' | 'expired'
+export type ExecutionStatus = 'pending' | 'submitted' | 'verifying' | 'removed' | 'still_present' | 'requires_manual' | 'failed'
 
 export interface Scan {
   id: number
@@ -30,6 +31,23 @@ export interface Finding {
   scope: string | null
   tool: string | null
   status: string
+  actionId: number | null
+}
+
+export interface ExecutionSummary {
+  attempt: number | null
+  status: ExecutionStatus | null
+  channel: string | null
+  targetUrl: string | null
+  verifiedAt: string | null
+  verificationDetail: string | null
+  note: string | null
+}
+
+export interface SiteAdvisory {
+  category: string
+  recommended: boolean | null
+  rationale: string
 }
 
 export interface ToolRun {
@@ -123,6 +141,15 @@ export interface PrivacyAction {
   status: ActionStatus
   createdAt: string
   approvedAt: string | null
+  siteAdvisory: SiteAdvisory | null
+  execution: ExecutionSummary | null
+}
+
+export interface RemovalResult {
+  findingId: number
+  actionId: number
+  status: string
+  execution: ExecutionSummary | null
 }
 
 export interface WorkerStatus {

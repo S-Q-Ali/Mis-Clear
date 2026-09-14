@@ -5,6 +5,7 @@ import type {
   LogEntry,
   Paginated,
   PrivacyAction,
+  RemovalResult,
   Report,
   Scan,
   ScanRisk,
@@ -89,6 +90,11 @@ export const approveAction = (id: number) =>
   api<{ id: number; status: string }>(`/api/actions/${id}/approve`, { method: 'POST' })
 export const declineAction = (id: number) =>
   api<{ id: number; status: string }>(`/api/actions/${id}/decline`, { method: 'POST' })
+export const removeAction = (id: number) =>
+  api<PrivacyAction>(`/api/actions/${id}/remove`, { method: 'POST' })
+export const removeFinding = (findingId: number) =>
+  api<RemovalResult>(`/api/findings/${findingId}/remove`, { method: 'POST' })
+export const getAction = (id: number) => api<PrivacyAction>(`/api/actions/${id}`)
 
 export const getLogs = (page = 1, pageSize = 30) =>
   api<Paginated<LogEntry>>(`/api/logs?page=${page}&pageSize=${pageSize}`)
