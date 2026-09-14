@@ -19,6 +19,7 @@ from sqlalchemy import select
 
 from app.backend import models as m
 from app.backend.models import _utcnow
+from app.backend.services.site_advisory import advisory_for
 
 CANDIDATE_CONFIDENCE = {"confirmed", "probable"}
 CANDIDATE_SEVERITY = {"critical", "high", "medium"}
@@ -191,10 +192,17 @@ def research_finding(db, finding: m.Finding) -> m.PrivacyAction:
         return a  # pending action already exists — reuse it
 
     proc = find_procedure(finding)
+    adv = advisory_for(finding.url)
     steps = "\n".join(f"- {s}" for s in proc.steps)
+    site_advisory_line = (
+        f"Site advisory: {adv['category']} "
+        f"(recommended={adv['recommended'] if adv['recommended'] is not None else 'unknown'}). "
+        f"{adv['rationale']}\n"
+    )
     instruction_text = (
         f"Official organization: {proc.organization}\n"
         f"Procedure URL: {proc.procedure_url or 'not on file (verify manually)'}\n"
+        f"{site_advisory_line}"
         f"Steps:\n{steps}\n\nRequest draft:\n{prepare_request(finding, proc)}"
     )
     action = m.PrivacyAction(

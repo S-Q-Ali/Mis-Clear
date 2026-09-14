@@ -18,8 +18,16 @@ from app.backend.schemas import (
     pagination_meta,
 )
 from app.backend.services import deletion_research
+from app.backend.services.site_advisory import advisory_for
 
 router = APIRouter(prefix="/api/actions", tags=["actions"])
+
+
+def _serialize(action: m.PrivacyAction) -> PrivacyActionOut:
+    url = action.finding.url if action.finding is not None else None
+    out = PrivacyActionOut.model_validate(action)
+    out.siteAdvisory = advisory_for(url)
+    return out
 
 
 @router.get("")
@@ -40,7 +48,7 @@ def list_actions(
         stmt.order_by(m.PrivacyAction.id.desc()).offset((page - 1) * pageSize).limit(pageSize)
     ).scalars().all()
     return Paginated[PrivacyActionOut](
-        data=[PrivacyActionOut.model_validate(r) for r in rows],
+        data=[_serialize(r) for r in rows],
         pagination=pagination_meta(total, page, pageSize),
     )
 
@@ -50,7 +58,7 @@ def get_action(action_id: int, db: Session = Depends(get_db)) -> PrivacyActionOu
     action = db.get(m.PrivacyAction, action_id)
     if action is None:
         raise api_error(404, "NOT_FOUND", f"Privacy action {action_id} not found")
-    return PrivacyActionOut.model_validate(action)
+    return _serialize(action)
 
 
 @router.post("/{action_id}/approve", status_code=200)

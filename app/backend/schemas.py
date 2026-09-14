@@ -214,6 +214,8 @@ class PrivacyActionOut(Camelised):
     status: str
     createdAt: datetime = forward(("createdAt", "created_at"))
     approvedAt: datetime | None = forward(("approvedAt", "approved_at"))
+    siteAdvisory: dict[str, Any] | None = None
+    execution: dict[str, Any] | None = None
 
 
 class DeletionResearchOut(BaseModel):

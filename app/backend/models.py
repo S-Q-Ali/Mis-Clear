@@ -6,7 +6,7 @@ tool_runs, audit_logs. All timestamps are UTC.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import (
@@ -23,7 +23,7 @@ from app.backend.database.engine import Base
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Scan(Base):
@@ -41,10 +41,10 @@ class Scan(Base):
     coverage: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    findings: Mapped[list["Finding"]] = relationship(back_populates="scan")
-    identities: Mapped[list["Identity"]] = relationship(back_populates="scan")
-    images: Mapped[list["Image"]] = relationship(back_populates="scan")
-    tool_runs: Mapped[list["ToolRun"]] = relationship(back_populates="scan")
+    findings: Mapped[list[Finding]] = relationship(back_populates="scan")
+    identities: Mapped[list[Identity]] = relationship(back_populates="scan")
+    images: Mapped[list[Image]] = relationship(back_populates="scan")
+    tool_runs: Mapped[list[ToolRun]] = relationship(back_populates="scan")
 
 
 class Identity(Base):
@@ -57,10 +57,10 @@ class Identity(Base):
     canonical: Mapped[str] = mapped_column(String(255), default="")
 
     scan: Mapped[Scan | None] = relationship(back_populates="identities")
-    outgoing: Mapped[list["Relationship"]] = relationship(
+    outgoing: Mapped[list[Relationship]] = relationship(
         foreign_keys="Relationship.source_id", back_populates="source"
     )
-    incoming: Mapped[list["Relationship"]] = relationship(
+    incoming: Mapped[list[Relationship]] = relationship(
         foreign_keys="Relationship.target_id", back_populates="target"
     )
 
@@ -130,6 +130,8 @@ class PrivacyAction(Base):
     # pending|approved|completed|declined|expired
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     approved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    finding: Mapped[Finding | None] = relationship()
 
 
 class Job(Base):

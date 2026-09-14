@@ -115,6 +115,15 @@ def test_research_finding_creates_pending_gated_action(session):
     assert action.evidence_reference == f"#{f.id}"
 
 
+def test_research_finding_embeds_site_advisory(session):
+    f = _finding(url="https://www.spokeo.com/u/alice")
+    session.add(f)
+    session.flush()
+    action = research_finding(session, f)
+    assert "Site advisory: data-broker" in action.instructions
+    assert "recommended=False" in action.instructions
+
+
 def test_research_finding_is_idempotent_and_no_clobber(session):
     f = _finding()
     session.add(f)
