@@ -45,8 +45,8 @@ def test_orchestrator_image_scan_persists_image_row_and_findings(tmp_path):
     session.expire_all()
     scan = session.get(m.Scan, scan.id)
     assert scan.status == "completed"
-    assert scan.coverage["tools_ran"] == 5
-    assert scan.coverage["findings"] == 2  # hash=1 + phash=1; exif/qr absent in PNG, vision blocked
+    assert scan.coverage["tools_ran"] == 6
+    assert scan.coverage["findings"] == 2  # hash=1 + phash=1; exif/qr absent in PNG, vision/nswf blocked
 
     image = session.execute(select(m.Image).where(m.Image.scan_id == scan.id)).scalars().first()
     assert image is not None
@@ -59,9 +59,11 @@ def test_orchestrator_image_scan_persists_image_row_and_findings(tmp_path):
     assert "image_hash" in types and "image_perceptual_hash" in types
 
     runs = session.execute(select(m.ToolRun).where(m.ToolRun.scan_id == scan.id)).scalars().all()
-    assert {r.tool for r in runs} == {"photo-hash", "photo-phash", "photo-exif", "photo-qr", "photo-vision"}
+    assert {r.tool for r in runs} == {"photo-hash", "photo-phash", "photo-exif", "photo-qr", "photo-vision", "photo-nsfw"}
     vision = next(r for r in runs if r.tool == "photo-vision")
     assert vision.status == "blocked"
+    nsfw = next(r for r in runs if r.tool == "photo-nsfw")
+    assert nsfw.status == "blocked"
 
 
 # ---------- upload API ----------
@@ -114,7 +116,7 @@ def test_upload_image_runs_photo_pipeline(client):
 
     tool_runs = client.get(f"/api/scans/{scan_id}/tool-runs")
     tools = {t["tool"] for t in tool_runs.json()["data"]}
-    assert tools == {"photo-hash", "photo-phash", "photo-exif", "photo-qr", "photo-vision"}
+    assert tools == {"photo-hash", "photo-phash", "photo-exif", "photo-qr", "photo-vision", "photo-nsfw"}
 
 
 def test_upload_rejects_garbage_bytes(client):

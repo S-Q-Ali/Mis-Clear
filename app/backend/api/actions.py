@@ -18,15 +18,17 @@ from app.backend.schemas import (
     pagination_meta,
 )
 from app.backend.services import deletion_research
+from app.backend.services.removal_executor import execution_summary, latest_execution, start_removal
 from app.backend.services.site_advisory import advisory_for
 
 router = APIRouter(prefix="/api/actions", tags=["actions"])
 
 
-def _serialize(action: m.PrivacyAction) -> PrivacyActionOut:
+def _serialize(db: Session, action: m.PrivacyAction) -> PrivacyActionOut:
     url = action.finding.url if action.finding is not None else None
     out = PrivacyActionOut.model_validate(action)
     out.siteAdvisory = advisory_for(url)
+    out.execution = execution_summary(latest_execution(db, action.id))
     return out
 
 
@@ -48,7 +50,7 @@ def list_actions(
         stmt.order_by(m.PrivacyAction.id.desc()).offset((page - 1) * pageSize).limit(pageSize)
     ).scalars().all()
     return Paginated[PrivacyActionOut](
-        data=[_serialize(r) for r in rows],
+        data=[_serialize(db, r) for r in rows],
         pagination=pagination_meta(total, page, pageSize),
     )
 
@@ -58,7 +60,7 @@ def get_action(action_id: int, db: Session = Depends(get_db)) -> PrivacyActionOu
     action = db.get(m.PrivacyAction, action_id)
     if action is None:
         raise api_error(404, "NOT_FOUND", f"Privacy action {action_id} not found")
-    return _serialize(action)
+    return _serialize(db, action)
 
 
 @router.post("/{action_id}/approve", status_code=200)
@@ -83,3 +85,23 @@ def decline_action(action_id: int, db: Session = Depends(get_db)) -> ActionTrans
                         f"Privacy action {action_id} cannot be declined from status {action.status}")
     db.commit()
     return ActionTransitionOut(id=action.id, status=action.status)
+
+
+@router.post("/{action_id}/remove", status_code=200)
+def remove_action(action_id: int, db: Session = Depends(get_db)) -> PrivacyActionOut:
+    """Human approval gate for THIS finding: run the removal ladder.
+
+    Deterministic rule set lives in `removal_executor`; the endpoint only
+    authorises (the button click) and returns the post-verification state.
+    Nothing is auto-sent to login-gated services; anonymous-form channels need
+    a curated machine-submittable profile.
+    """
+    action = db.get(m.PrivacyAction, action_id)
+    if action is None:
+        raise api_error(404, "NOT_FOUND", f"Privacy action {action_id} not found")
+    if action.status not in ("pending", "approved"):
+        raise api_error(409, "ACTION_NOT_REMOVABLE",
+                        f"Privacy action {action_id} cannot be removed from status {action.status}")
+    start_removal(db, action_id)
+    db.refresh(action)
+    return _serialize(db, action)

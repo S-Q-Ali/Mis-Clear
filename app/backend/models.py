@@ -133,6 +133,36 @@ class PrivacyAction(Base):
 
     finding: Mapped[Finding | None] = relationship()
 
+    executions: Mapped[list[ActionExecution]] = relationship(
+        back_populates="action", order_by="ActionExecution.attempt"
+    )
+
+
+class ActionExecution(Base):
+    """A removal attempt for a PrivacyAction (Phase 16, slice 6).
+
+    status: pending | submitted | verifying | removed | still_present |
+    requires_manual | failed. Manifests the escalation ladder: each attempt
+    transitions through submitted -> verifying, and only a real re-verification
+    may mark `removed` — the result is never fabricated.
+    """
+
+    __tablename__ = "action_executions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    action_id: Mapped[int] = mapped_column(ForeignKey("actions.id"), index=True)
+    attempt: Mapped[int] = mapped_column(default=1)
+    status: Mapped[str] = mapped_column(String(20), default="pending")
+    channel: Mapped[str] = mapped_column(String(24), default="manual")
+    target_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    verification_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+    action: Mapped[PrivacyAction | None] = relationship(back_populates="executions")
+
 
 class Job(Base):
     __tablename__ = "jobs"

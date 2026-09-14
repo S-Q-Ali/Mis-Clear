@@ -39,6 +39,15 @@ from app.backend.services.scan_orchestrator import run_scan
 router = APIRouter(prefix="/api/scans", tags=["scans"])
 
 
+def _serialize_finding(db: Session, finding: m.Finding) -> FindingOut:
+    """FindingOut enriched with the id of its researched action (Phase 16)."""
+    out = FindingOut.model_validate(finding)
+    out.actionId = db.execute(
+        select(m.PrivacyAction.id).where(m.PrivacyAction.finding_id == finding.id)
+    ).scalar_one_or_none()
+    return out
+
+
 class ScanRunRequest(BaseModel):
     """Optional tool subset for POST /api/scans/{id}/run."""
 
@@ -217,7 +226,7 @@ def list_findings(
     stmt = select(m.Finding).where(m.Finding.scan_id == scan_id)
     total = db.execute(select(func.count()).select_from(stmt.subquery())).scalar() or 0
     rows = db.execute(stmt.order_by(m.Finding.id.desc()).offset((page - 1) * pageSize).limit(pageSize)).scalars().all()
-    return Paginated[FindingOut](data=[FindingOut.model_validate(r) for r in rows],
+    return Paginated[FindingOut](data=[_serialize_finding(db, r) for r in rows],
                                  pagination=pagination_meta(total, page, pageSize))
 
 

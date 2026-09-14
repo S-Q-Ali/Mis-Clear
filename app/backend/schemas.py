@@ -81,6 +81,7 @@ class FindingOut(Camelised):
     scope: str | None = None
     tool: str | None = None
     status: str
+    actionId: int | None = None
 
 
 class ToolRunOut(Camelised):
@@ -228,6 +229,13 @@ class DeletionResearchOut(BaseModel):
 class ActionTransitionOut(BaseModel):
     id: int
     status: str
+
+
+class RemovalOut(BaseModel):
+    findingId: int
+    actionId: int
+    status: str
+    execution: dict[str, Any] | None = None
 
 
 class LogOut(Camelised):

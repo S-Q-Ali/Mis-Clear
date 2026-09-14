@@ -9,7 +9,7 @@ Future phases append new `Migration` entries — never edit applied ones.
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
@@ -68,7 +68,26 @@ V3_JOB_SCAN_FK = Migration(
     "jobs.scene_id -> scan_id (typo fix)",
     fn=lambda engine: _rename_if_exists(engine, "jobs", "scene_id", "scan_id", "INTEGER"),
 )
-MIGRATIONS: list[Migration] = [BASELINE, V2_IDEMPOTENCY, V3_JOB_SCAN_FK]
+V4_ACTION_EXECUTIONS = Migration(
+    4,
+    "action_executions table for removal executor (Phase 16)",
+    ddl=(
+        "CREATE TABLE IF NOT EXISTS action_executions ("
+        "id INTEGER PRIMARY KEY, "
+        "action_id INTEGER NOT NULL, "
+        "attempt INTEGER NOT NULL DEFAULT 1, "
+        "status TEXT NOT NULL DEFAULT 'pending', "
+        "channel TEXT NOT NULL DEFAULT 'manual', "
+        "target_url TEXT, "
+        "submitted_at TEXT, "
+        "verified_at TEXT, "
+        "verification_detail TEXT, "
+        "note TEXT, "
+        "created_at TEXT DEFAULT (datetime('now')), "
+        "FOREIGN KEY(action_id) REFERENCES actions(id))"
+    ),
+)
+MIGRATIONS: list[Migration] = [BASELINE, V2_IDEMPOTENCY, V3_JOB_SCAN_FK, V4_ACTION_EXECUTIONS]
 
 
 def current_version(engine: Engine) -> int:
