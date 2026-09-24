@@ -23,13 +23,15 @@ class Camelised(BaseModel):
 
 class ScanCreate(BaseModel):
     targetType: TargetType
-    targetValue: str = Field(min_length=1, max_length=255)
+    targetValue: str = Field(max_length=255)
     scanMode: ScanMode = "local"
 
     @field_validator("targetValue")
     @classmethod
     def _validate_target(cls, v: str, info) -> str:
         v = v.strip()
+        if info.data.get("targetType") == "image":
+            return v or "(image)"
         if not v:
             raise ValueError("targetValue must not be blank")
         if info.data.get("targetType") == "email" and "@" not in v:
