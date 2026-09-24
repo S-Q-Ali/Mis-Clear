@@ -16,6 +16,10 @@ Threat list for Privacy Guardian (living doc; grows with phases).
 | T10 | CSRF/XSS on local UI | frontend | React defaults, CSP, no unsafe innerHTML; **API responses get CSP `default-src 'none'`, nosniff/deny-frame/no-referrer/no-store headers** | 12,13 |
 | T11 | Decompression / pixel bomb | image upload | **upload rejects declared `width*height > 50 MP` before pixels are allocated (in addition to 20 MB size cap + magic-byte verify)** | 7,13 |
 | T12 | Feedback / output-data servility | LLM output, fetched pages | AI output = data only; risk scoring + research are deterministic; **explanation determinism verified by test** | 10,13 |
+| T13 | Agent prompt injection via tool results | agent brain, tool outputs | loop wraps tool output as `<untrusted>`; evidence-only findings; allowlist blocks unknown tools (incl. shell/URL/exec); **security suite: injected 'run shell' results stay inert, arg allowlisting strips hostile keys** | 14–15 |
+| T14 | Agent auto-removal / state change | agent confirm flow | **no action without a per-item confirm event**: proposals are read back from persisted conversation steps, `POST /confirm` only `approve|deny`, actions stay `pending` behind the existing approval UI; security tests assert chat never creates actions | 15 |
+| T15 | Secret/plaintext in agent audit trail | conversation persistence | tool args that look like secrets redacted to `***` before DB write; breach path emits only k-anonymity prefix + suffix count (no plaintext, no full hash); **verified by persist + security tests** | 15 |
+| T16 | Third-party-network abuse by agent | agent tools | reverse-image search and breach range API gated behind explicit hybrid approval (`approveHybrid`); local-only runs report blocked; **verified by gate tests** | 15 |
 
 ## Residual risks (accepted)
 - OSINT source reliability varies → evidence captures exact source + timestamp + confidence.

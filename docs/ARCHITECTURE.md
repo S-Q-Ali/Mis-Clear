@@ -103,9 +103,24 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
   validation fed by OSINT targets + sitecheck manifest probe URLs),
   `middleware.py` (security response headers). Evidence caps + upload
   decompression-bomb guard live in `tools/base.py` and `app/backend/api/scans.py`.
+- `app/backend/services/agent/` — agentic self-data investigator
+  (`SPEC-agentic-investigator.md` + `SPEC-agent-*.md`): `registry.py` wraps the
+  deterministic adapters behind strict-JSON `ToolSpec`s (email_lookup,
+  username_lookup, web_search, dns, whois, github_user, site_check, photo_*,
+  graph_expand, breach_check); `breach.py` k-anonymity (5-hex SHA-1 prefix,
+  ephemeral, never plaintext); `model.py` AgentResult/AgentStep; `brain.py`
+  AgentBrain (Colab 27B → local Ollama → graceful block); `loop.py` ReAct loop
+  (allowlist, arg allowlisting, step budget, per-step timeout, deterministic
+  removal proposals); `conversation_store.py` persisted redacted audit
+  conversations; `removal_flow.py` confirm-gated removals. API in
+  `app/backend/api/agent.py`: `GET /status`, `POST /chat` (SSE streaming),
+  `POST /confirm` (approve/deny only), `GET /conversations[/{id}]`. V5 migration
+  adds `agent_conversations` + `agent_messages`.
 - `tests/security/` — 55 tests (SSRF, unsafe URL, path traversal, upload
   hardening, command injection, prompt injection, malicious webpage,
-  authorization, CORS/exposure, security headers).
+  authorization, CORS/exposure, security headers) + agent injection suite
+  (`test_agent_injection.py`: no exec/URL tools, hybrid gate on
+  reverse-image/breach, injected results stay inert).
 
 ## Module ownership map
 
@@ -125,5 +140,8 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
 | Identity graph | `app/backend/services/identity_graph.py` | 9 ✅ |
 | Risk engine | `app/backend/services/risk_engine.py` | 10 ✅ |
 | Deletion research | `app/backend/services/deletion_research.py` | 11 ✅ |
+| Deletion research (agent, confirm-gated) | `app/backend/services/agent/removal_flow.py` | 15 ✅ |
+| Agent tool registry/loop | `app/backend/services/agent/{registry,breach,brain,loop}.py` | 15 ✅ |
+| Agent API + conversations | `app/backend/api/agent.py`, `conversation_store.py`, V5 schema | 15 ✅ |
 | Frontend UI | `app/frontend/src/*` | 12 ✅ |
 | UI support API | `app/backend/api/{logs,settings}.py` | 12 ✅ |

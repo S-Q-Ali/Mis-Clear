@@ -41,6 +41,28 @@ Deterministic security rules; AI assists reasoning but never lowers safety.
 - No AI backend available is a valid state: the app degrades, it never
   substitutes a weaker cloud model silently.
 
+## Agent safety (14–15, SPEC-agent-*)
+- **Brain is a proposer, never an actor.** The ReAct loop (`loop.py`) only
+  executes allowlisted tools whose args are validated against the spec; web and
+  model content is wrapped as `<untrusted>` data and can never add tools, run
+  shell, or follow URLs (the registry ships no shell/URL/exec tools).
+- **Evidence-only findings.** No claim can become evidence unless a tool
+  actually returned it; model text is opinion.
+- **Deterministic removal proposals.** `propose_removals` maps real tool-returned
+  URLs to removal suggestions — the model never invents targets.
+- **No confirm event, no action.** `POST /api/agent/confirm` accepts only
+  `approve`/`deny` for a proposal read back from the *persisted* conversation
+  steps; approve creates a `pending` `PrivacyAction` (approval_required=True)
+  that still needs the existing Actions-UI approval before any execution.
+- **Third-party-network gate.** Reverse-image search and the k-anonymity breach
+  range API are only enabled when the user ticks `approveHybrid` for that run;
+  local-only runs report `blocked`.
+- **Ephemeral secrets.** Breach inputs are never stored or emitted (k-anonymity
+  5-hex prefix + local suffix compare); conversation tool args that look like
+  secrets are redacted to `***` before persistence.
+- **Rate limit.** `/api/agent/chat` is throttled per client
+  (`PG_AGENT_RATE_LIMIT_PER_MINUTE`, default 20, → 429).
+
 ## Transport
 - Backend binds `127.0.0.1` only unless the user explicitly enables otherwise.
 - CORS restricted to local Vite origin by default.
@@ -67,6 +89,9 @@ Deterministic security rules; AI assists reasoning but never lowers safety.
   **0 vulnerabilities**.
 - Secret scan over tracked files (git grep): only benign matches (doc prose,
   test fixtures, URL regexes).
-- 55 security tests in `tests/security/` covering the list above.
+- 55 security tests in `tests/security/` covering the list above, plus the
+  agent injection suite (`test_agent_injection.py`): no exec/URL tools in the
+  allowlist, injected tool results stay inert, hybrid gate blocks
+  reverse-image/breach without approval, k-anonymity holds on approval.
 
 See also `docs/THREAT_MODEL.md`.

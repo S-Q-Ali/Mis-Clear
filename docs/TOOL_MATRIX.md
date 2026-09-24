@@ -31,6 +31,8 @@ run(target) -> ToolResult
 | Ollama Qwen-VL/Gemma | local vision | same | ✅ router code (backend optional) |
 | Colab worker | heavy vision/OCR/embeddings | `colab/` (capabilities, handlers, worker lifecycle, notebook incl. Ollama setup); dispatch bind via `app/backend/services/job_dispatcher.py` + direct protocol `GET /api/jobs/next`, `POST /api/jobs/{job_id}/result` | ✅ Phase 8 (+ protocol E2E) |
 | Laptop dispatcher | job submit/poll | `app/backend/services/job_dispatcher.py` + `POST /api/jobs/{id}/dispatch|poll` | ✅ Phase 8 |
+| Agent tools (agentic-self-data layer) | agent-callable strict-JSON wrappers over the OSINT/photo adapters | `app/backend/services/agent/registry.py` `build_agent_tools()` → `ToolSpec`s: email_lookup, username_lookup, web_search, dns, whois, github_user, site_check, photo_vision, photo_nsfw, photo_reverse_search (hybrid-gated), graph_expand, breach_check (hybrid-gated k-anonymity) | ✅ Phase 15 |
+| Breach range API (k-anonymity) | password breach check (Pwned‑style) | `app/backend/services/agent/breach.py` (5‑hex SHA‑1 prefix over network, suffix match locally, ephemeral) + `PG_BREACH_API_URL` | ✅ Phase 15 |
 
 ## Policy
 - Prefer local-first; every external call must be optional + approved where it

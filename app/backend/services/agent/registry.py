@@ -252,7 +252,12 @@ def build_agent_tools(
         runner=run_graph_expand,
     )
 
-    breaker = breach_checker or BreachChecker(base_url=breach_base_url, client=client() or None)
+    # k-anonymity breach range API is a third-party-network call: gated on the
+    # same explicit hybrid approval as reverse-image search (SPEC-hardening).
+    breaker = breach_checker or BreachChecker(
+        base_url=(breach_base_url if hybrid_allowed else ""),
+        client=client() or None,
+    )
 
     def run_breach_check(**kwargs: Any) -> dict:
         passwords = kwargs.get("passwords") or []

@@ -138,6 +138,7 @@ def test_build_agent_tools_wires_breach_base_url():
 
     tools = build_agent_tools(
         breach_base_url="https://api.example/range",
+        hybrid_allowed=True,
         client_factory=lambda: FakeClient(),  # type: ignore[arg-type]
     )
     out = tools["breach_check"].runner(passwords=["probe-pw"])
