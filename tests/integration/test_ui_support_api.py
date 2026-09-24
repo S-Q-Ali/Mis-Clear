@@ -9,6 +9,7 @@ from app.backend import models as m
 
 @pytest.fixture()
 def ctx(tmp_path, monkeypatch):
+    import app.backend.api.settings as st
     import app.backend.api.workers as wk
     import app.backend.config as cfg
     import app.backend.database.engine as eng
@@ -21,6 +22,7 @@ def ctx(tmp_path, monkeypatch):
     monkeypatch.setattr(eng, "settings", test_settings)
     monkeypatch.setattr(wk, "settings", test_settings)
     monkeypatch.setattr(jd, "settings", test_settings)
+    monkeypatch.setattr(st, "settings", test_settings)
 
     eng.engine = eng.build_engine(test_settings.database_path)
     eng.SessionLocal = sessionmaker(bind=eng.engine, autoflush=False, autocommit=False)
