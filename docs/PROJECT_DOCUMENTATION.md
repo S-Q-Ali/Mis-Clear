@@ -34,6 +34,7 @@ and coverage gaps.
 | 14 | Testing | ✅ E2E over real HTTP + failure/recovery battery + Colab worker protocol E2E (235 tests) |
 | 15 | Audit | ✅ final audit + release notes (235 tests) |
 | 16 | Removal | ✅ NSFW/photo‑nsfw async job + categorized takedown procedures + automated removal executor with human‑gate + re‑verify (see below) |
+| 17 | Filing bundle | ✅ deterministic, honest, real‑rows‑only ZIP export of a scan (findings/actions/executions/audit/graph/risk + honesty manifest) |
 
 ## Current implementation
 
@@ -41,6 +42,7 @@ and coverage gaps.
   `POST/GET /api/scans`, `/api/scans/{id}/findings`, `/api/scans/{id}/tool-runs`,
   `/api/scans/{id}/graph` (+ `/rebuild`), `/api/scans/{id}/risk`,
   `/api/scans/{id}/deletion-research`, `/api/actions` (+ `/approve`/`/decline`),
+   `/api/scans/{id}/filing-bundle` (download-only),
   `/api/jobs` (+ `/dispatch`/`/poll`),
   `/api/workers`, `/api/reports/{scan_id}`; idempotent scan creation
    (`Idempotency-Key` header, dedupe + replay); consistent error envelope

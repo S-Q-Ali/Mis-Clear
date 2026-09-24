@@ -26,6 +26,7 @@ run(target) -> ToolResult
 | NSFW detector | NSFW/sensitive image classification | `tools/photo/nsfw.py` → `nsfw_analysis` Colab job (`colab/handlers.py` `_handle_nsfw`) | ✅ Phase 16 (hybrid‑first, strict‑local honest‑blocked) |
 | Removal registry | official takedown/removal records | `app/backend/services/removal_registry.py` + curated `tools/site_manifests/removal.json` | ✅ Phase 16 (real, stable official URLs; unknown → `known=False`) |
 | Removal executor | per‑finding/channel removal ladder | `app/backend/services/removal_executor.py` (human‑gate, re‑verify, escalation, `action_executions`) | ✅ Phase 16 |
+| Filing bundle | deterministic honest ZIP export for a scan | `app/backend/services/filing_bundle.py` (stdlib ZIP, real rows only → `GET /api/scans/{id}/filing-bundle`) | ✅ Phase 17 |
 | Ollama Qwen | local reasoning | `app/backend/services/model_router.py` | ✅ router code (backend optional) |
 | Ollama Qwen-VL/Gemma | local vision | same | ✅ router code (backend optional) |
 | Colab worker | heavy vision/OCR/embeddings | `colab/` (capabilities, handlers, worker lifecycle, notebook incl. Ollama setup); dispatch bind via `app/backend/services/job_dispatcher.py` + direct protocol `GET /api/jobs/next`, `POST /api/jobs/{job_id}/result` | ✅ Phase 8 (+ protocol E2E) |

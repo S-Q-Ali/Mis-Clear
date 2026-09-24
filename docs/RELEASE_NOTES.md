@@ -1,5 +1,21 @@
 # Release Notes — Privacy Guardian
 
+## v0.5.0 (2026-09-24) — Honest filing bundle (Phase 17)
+
+- **Filing bundle download** (`app/backend/services/filing_bundle.py` +
+  `GET /api/scans/{id}/filing-bundle`): stdlib-only, byte-deterministic ZIP of
+  one scan built **only from REAL, already-committed rows** — findings, actions,
+  execution attempts, scan-scoped audit trail, deterministic identity graph and
+  risk breakdown, plus a manifest that never claims anything was removed unless
+  an execution actually re-verified it. Honesty contract: `autoSent: false`,
+  fabricated entries `0`, `removed`/`requiresManual` counted only from recorded
+  executions; the only non-deterministic marker is the real UTC `generatedAt`.
+  Filing stays a human action — the bundle is evidence for it, never a fake
+  "filed" claim.
+- **Verification**: unit (determinism except `generatedAt`, real-rows-only
+  counts, no fabricated domains) + integration (real ZIP download over the
+  control plane with honest attachment headers, 404). ruff clean.
+
 ## v0.4.0 (2026-09-14) — Personal-detail takedowns + NSFW/removal executor
 
 - **Categorized takedown procedures** (Phase 16): curated
