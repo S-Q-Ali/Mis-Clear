@@ -31,6 +31,15 @@ class Settings(BaseSettings):
     default_scan_mode: str = "local"
     hybrid_requires_explicit_approval: bool = True
 
+    # Agentic self-data investigator (SPEC-agent-*)
+    agent_enabled: bool = True
+    agent_max_steps: int = 20
+    agent_step_timeout_seconds: float = 25.0
+    # Optional model override for the agent brain; empty = router's reasoning model.
+    agent_model: str = ""
+    # Requests/minute per client for /api/agent/chat (S7 hardening).
+    agent_rate_limit_per_minute: int = 20
+
     # OSINT tool adapters (Phase 6)
     osint_enabled: bool = True
     osint_timeout_seconds: float = 10.0
