@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Actions from './views/Actions'
+import Agent from './views/Agent'
 import Dashboard from './views/Dashboard'
 import Logs from './views/Logs'
 import Scans from './views/Scans'
@@ -8,7 +9,7 @@ import ScanDetail, { type DetailTab } from './views/ScanDetail'
 import Workers from './views/Workers'
 import './App.css'
 
-type View = 'dashboard' | 'scans' | 'overview' | 'findings' | 'graph' | 'photo' | 'actions' | 'logs' | 'workers' | 'settings'
+type View = 'dashboard' | 'scans' | 'overview' | 'findings' | 'graph' | 'photo' | 'agent' | 'actions' | 'logs' | 'workers' | 'settings'
 
 const NAV: { key: View; label: string; needsScan?: boolean }[] = [
   { key: 'dashboard', label: 'Dashboard' },
@@ -17,6 +18,7 @@ const NAV: { key: View; label: string; needsScan?: boolean }[] = [
   { key: 'findings', label: 'Findings & evidence', needsScan: true },
   { key: 'graph', label: 'Identity graph', needsScan: true },
   { key: 'photo', label: 'Photo analysis', needsScan: true },
+  { key: 'agent', label: 'Agent chat' },
   { key: 'actions', label: 'Privacy actions' },
   { key: 'workers', label: 'Worker status' },
   { key: 'settings', label: 'Settings' },
@@ -98,6 +100,7 @@ function App() {
         {view === 'scans' && <Scans onOpen={openScan} />}
         {isScanScoped && scanDetailView(view)}
         {view === 'actions' && <Actions />}
+        {view === 'agent' && <Agent />}
         {view === 'workers' && <Workers />}
         {view === 'settings' && <Settings />}
         {view === 'logs' && <Logs />}

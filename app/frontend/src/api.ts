@@ -1,4 +1,9 @@
 import type {
+  AgentConversation,
+  AgentConversationDetail,
+  AgentDone,
+  AgentStatus,
+  AgentStreamEvent,
   Graph,
   Finding,
   ImageDetails,
@@ -101,6 +106,73 @@ export const getLogs = (page = 1, pageSize = 30) =>
 export const getWorkerStatus = () => api<WorkerStatus>('/api/workers')
 export const getSettings = () => api<Settings>('/api/settings')
 export const getHealth = () => api<{ status: string }>('/api/health')
+
+export const getAgentStatus = () => api<AgentStatus>('/api/agent/status')
+export const getAgentConversations = () => api<AgentConversation[]>('/api/agent/conversations')
+export const getAgentConversation = (id: number) =>
+  api<AgentConversationDetail>(`/api/agent/conversations/${id}`)
+
+function parseSseFrame(frame: string): AgentStreamEvent | null {
+  let kind = ''
+  let data = ''
+  for (const line of frame.split('\n')) {
+    if (line.startsWith('event: ')) kind = line.slice('event: '.length)
+    else if (line.startsWith('data: ')) data = line.slice('data: '.length)
+  }
+  if (!kind || !data) return null
+  try {
+    const parsed = JSON.parse(data) as AgentStreamEvent
+    parsed.kind = kind as AgentStreamEvent['kind']
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+export async function streamAgentChat(
+  message: string,
+  approveHybrid: boolean,
+  onEvent: (evt: AgentStreamEvent) => void,
+): Promise<AgentDone> {
+  const res = await fetch(`${BASE}/api/agent/chat`, {
+    method: 'POST',
+    headers: { Accept: 'text/event-stream', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, approveHybrid }),
+  })
+  if (res.status === 429) throw new Error('Too many agent requests (rate limited)')
+  if (!res.ok) {
+    let msg = `Agent request failed (${res.status})`
+    try {
+      const body = await res.json()
+      if (body?.error?.message) msg = body.error.message
+    } catch {
+      /* keep default */
+    }
+    throw new Error(msg)
+  }
+  if (!res.body) throw new Error('Streaming not supported by this browser')
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let done: AgentDone | null = null
+  for (;;) {
+    const { value, done: streamDone } = await reader.read()
+    if (streamDone) break
+    buffer += decoder.decode(value, { stream: true })
+    let idx = -1
+    while ((idx = buffer.indexOf('\n\n')) !== -1) {
+      const frame = buffer.slice(0, idx)
+      buffer = buffer.slice(idx + 2)
+      const evt = parseSseFrame(frame)
+      if (evt) {
+        onEvent(evt)
+        if (evt.kind === 'done') done = evt as unknown as AgentDone
+      }
+    }
+  }
+  if (!done) throw new Error('Agent stream ended without a result')
+  return done
+}
 
 export { api }
 export type { ApiOptions }

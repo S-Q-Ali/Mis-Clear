@@ -200,3 +200,65 @@ export interface Report {
   sourcesChecked: string[]
   aiAvailable: boolean
 }
+
+export type AgentStepKind =
+  | 'user'
+  | 'start'
+  | 'done'
+  | 'thought'
+  | 'tool'
+  | 'result'
+  | 'evidence'
+  | 'error'
+  | 'confirm'
+
+export interface AgentStep {
+  kind: AgentStepKind
+  label: string
+  detail: string
+  evidence: string[]
+  data: Record<string, unknown>
+}
+
+export interface AgentStreamEvent extends AgentStep {
+  conversationId?: number
+  message?: string
+  answer?: string
+  blocked?: boolean
+}
+
+export interface AgentDone {
+  conversationId: number
+  answer: string
+  blocked: boolean
+  confirmRequired: string[]
+}
+
+export interface AgentStatus {
+  enabled: boolean
+  configured: boolean
+  backend: string
+}
+
+export interface AgentConversation {
+  id: number
+  title: string
+  status: string
+  hybridApproved: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AgentMessage {
+  id: number
+  role: string
+  content: string | null
+  blocked: boolean
+  steps: AgentStep[] | null
+  answer: string | null
+  createdAt: string
+}
+
+export interface AgentConversationDetail extends AgentConversation {
+  messages: AgentMessage[]
+}
