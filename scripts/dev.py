@@ -25,7 +25,9 @@ from pathlib import Path
 
 BACKEND_APP = "app.backend.main:app"
 FRONTEND_PORT = 5173
-TUNNEL_URL_RE = re.compile(r"https://[a-z0-9-]+\.trycloudflare\.com")
+TUNNEL_URL_RE = re.compile(
+    r"https://[a-z0-9]+(?:-[a-z0-9]+)+\.trycloudflare\.com"
+)
 COLAB_REPO = "S-Q-Ali/Mis-Clear"
 COLAB_BRANCH = "main"
 COLAB_NOTEBOOK_PATH = "colab/privacy_guardian_worker.ipynb"
@@ -266,7 +268,7 @@ def main(argv: list[str] | None = None) -> int:
             if cloudflared is None:
                 print("[dev] WARN: cloudflared not found; tunnel skipped.", file=sys.stderr)
             else:
-                found = {"url": None}
+                found = {"url": None, "failed": False}
 
                 def _on_line(line: str) -> None:
                     url = parse_tunnel_url(line)
@@ -278,6 +280,18 @@ def main(argv: list[str] | None = None) -> int:
                             print("[dev] tunnel URL copied to clipboard")
                         if not no_open and args.open_colab:
                             open_in_browser(colab_notebook_url())
+                    elif (
+                        found["url"] is None
+                        and not found["failed"]
+                        and "failed to request quick Tunnel" in line
+                    ):
+                        found["failed"] = True
+                        print(
+                            "[dev] WARN: Cloudflare quick tunnel failed (trycloudflare API "
+                            "timed out). Press Ctrl+C and restart to retry. The app still "
+                            "runs locally at http://127.0.0.1:5173.",
+                            file=sys.stderr,
+                        )
 
                 tunnel_cmd = [cloudflared, *build_tunnel_command(args.host, args.port)[1:]]
                 tunnel_proc = _popen(tunnel_cmd, root)

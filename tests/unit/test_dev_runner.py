@@ -49,6 +49,22 @@ def test_parse_tunnel_url_returns_none_when_absent(dev):
     assert dev.parse_tunnel_url("no url here yet\n") is None
 
 
+def test_parse_tunnel_url_ignores_trycloudflare_api_host(dev):
+    output = (
+        '[tunnel] failed to request quick Tunnel: Post "https://api.trycloudflare.com/tunnel": '
+        "context deadline exceeded"
+    )
+
+    assert dev.parse_tunnel_url(output) is None
+
+
+def test_parse_tunnel_url_requires_hyphenated_subdomain(dev):
+    assert dev.parse_tunnel_url("https://api.trycloudflare.com") is None
+    assert dev.parse_tunnel_url("https://levy-acknowledged-skins-sense.trycloudflare.com") == (
+        "https://levy-acknowledged-skins-sense.trycloudflare.com"
+    )
+
+
 def test_is_port_free_true_for_unused_port(dev):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
         probe.bind(("127.0.0.1", 0))
