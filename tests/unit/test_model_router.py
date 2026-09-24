@@ -4,8 +4,8 @@ import httpx
 import pytest
 
 from app.backend.services.model_router import (
-    ModelRouter,
     ModelResponse,
+    ModelRouter,
     ModelUnavailableError,
     OllamaBackend,
 )

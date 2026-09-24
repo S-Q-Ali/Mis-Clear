@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-from app.backend.config import Settings, settings
+from app.backend.config import settings
 
 
 class Base(DeclarativeBase):
@@ -52,7 +52,6 @@ def init_db() -> None:
 def init_db_at(db_path: str) -> Engine:
     """Migrate a schema at a specific path (test isolation) and return its engine."""
     import app.backend.models  # noqa: F401  # register models on Base.metadata
-
     from app.backend.database.migrations import migrate
 
     eng = build_engine(db_path)

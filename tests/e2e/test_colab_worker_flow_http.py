@@ -46,7 +46,7 @@ def test_colab_worker_pickup_and_result(http):
     assert empty.status_code == 204
 
     # --- 4. Colab worker POSTs the JobResult ---
-    result = client.post(f"/api/jobs/colab-e2e-1/result", json={
+    result = client.post("/api/jobs/colab-e2e-1/result", json={
         "protocol_version": "1",
         "job_id": "colab-e2e-1",
         "status": "completed",
@@ -87,7 +87,7 @@ def test_colab_worker_reports_failure(http):
     body = nxt.json()
     internal_id = body["_internal_id"]
 
-    result = client.post(f"/api/jobs/colab-e2e-fail/result", json={
+    result = client.post("/api/jobs/colab-e2e-fail/result", json={
         "job_id": "colab-e2e-fail",
         "status": "failed",
         "errors": ["GPU OOM: image too large"],
@@ -117,7 +117,7 @@ def test_result_rejects_invalid_status(http):
     nxt = client.get("/api/jobs/next")
     assert nxt.status_code == 200
 
-    resp = client.post(f"/api/jobs/colab-e2e-badstatus/result", json={
+    resp = client.post("/api/jobs/colab-e2e-badstatus/result", json={
         "job_id": "colab-e2e-badstatus",
         "status": "fake_status",
     })

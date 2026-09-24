@@ -36,5 +36,10 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
-    detail = exc.detail if isinstance(exc.detail, dict) else {"error": {"code": "HTTP_%d" % exc.status_code, "message": str(exc.detail)}}
+    if isinstance(exc.detail, dict):
+        detail = exc.detail
+    else:
+        detail = {
+            "error": {"code": f"HTTP_{exc.status_code}", "message": str(exc.detail)}
+        }
     return JSONResponse(status_code=exc.status_code, content=detail)
