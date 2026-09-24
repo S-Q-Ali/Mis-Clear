@@ -93,3 +93,59 @@ def test_backend_env_colab_only_disables_local_ollama(dev):
 
 def test_backend_env_default_is_empty(dev):
     assert dev.backend_env(colab_only=False) == {}
+
+
+def test_frontend_url_points_at_vite(dev):
+    assert dev.frontend_url() == "http://127.0.0.1:5173"
+
+
+def test_colab_notebook_url_is_open_in_colab_link(dev):
+    url = dev.colab_notebook_url()
+
+    assert url.startswith("https://colab.research.google.com/github/")
+    assert url.endswith("/blob/main/colab/privacy_guardian_worker.ipynb")
+
+
+def test_open_in_browser_calls_webbrowser(dev, monkeypatch):
+    opened: list[str] = []
+    monkeypatch.setattr(dev.webbrowser, "open", lambda url: opened.append(url) or True)
+
+    assert dev.open_in_browser("http://example.test") is True
+    assert opened == ["http://example.test"]
+
+
+def test_copy_to_clipboard_uses_clip_on_windows(dev, monkeypatch):
+    calls: list[tuple] = []
+
+    class _Done:
+        returncode = 0
+
+    def fake_run(cmd, **kwargs):
+        calls.append((cmd, kwargs))
+        return _Done()
+
+    monkeypatch.setattr(dev.sys, "platform", "win32")
+    monkeypatch.setattr(dev.subprocess, "run", fake_run)
+
+    assert dev.copy_to_clipboard("https://x.trycloudflare.com") is True
+    assert calls[0][0] == ["clip"]
+    assert calls[0][1]["input"] == "https://x.trycloudflare.com"
+
+
+def test_copy_to_clipboard_returns_false_on_failure(dev, monkeypatch):
+    monkeypatch.setattr(dev.sys, "platform", "win32")
+
+    def boom(*args, **kwargs):
+        raise FileNotFoundError("clip missing")
+
+    monkeypatch.setattr(dev.subprocess, "run", boom)
+
+    assert dev.copy_to_clipboard("x") is False
+
+
+def test_wait_for_http_false_for_dead_port(dev):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.bind(("127.0.0.1", 0))
+        dead_port = probe.getsockname()[1]
+
+    assert dev.wait_for_http(f"http://127.0.0.1:{dead_port}/health", timeout=0.5) is False

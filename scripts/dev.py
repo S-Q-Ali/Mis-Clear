@@ -18,16 +18,71 @@ import subprocess
 import sys
 import threading
 import time
+import urllib.error
+import urllib.request
+import webbrowser
 from pathlib import Path
 
 BACKEND_APP = "app.backend.main:app"
 FRONTEND_PORT = 5173
 TUNNEL_URL_RE = re.compile(r"https://[a-z0-9-]+\.trycloudflare\.com")
+COLAB_REPO = "S-Q-Ali/Mis-Clear"
+COLAB_BRANCH = "main"
+COLAB_NOTEBOOK_PATH = "colab/privacy_guardian_worker.ipynb"
 
 
 def repo_root() -> Path:
     """Return the project root (parent of this script's directory)."""
     return Path(__file__).resolve().parents[1]
+
+
+def frontend_url() -> str:
+    return f"http://127.0.0.1:{FRONTEND_PORT}"
+
+
+def colab_notebook_url() -> str:
+    """'Open in Colab' link for the GPU worker notebook."""
+    return (
+        f"https://colab.research.google.com/github/{COLAB_REPO}"
+        f"/blob/{COLAB_BRANCH}/{COLAB_NOTEBOOK_PATH}"
+    )
+
+
+def open_in_browser(url: str) -> bool:
+    """Open ``url`` in the default browser; never raises."""
+    try:
+        return bool(webbrowser.open(url))
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def copy_to_clipboard(text: str) -> bool:
+    """Copy ``text`` to the system clipboard; returns False if unavailable."""
+    if sys.platform == "win32":
+        cmd = ["clip"]
+    elif sys.platform == "darwin":
+        cmd = ["pbcopy"]
+    else:
+        cmd = ["xclip", "-selection", "clipboard"]
+    try:
+        subprocess.run(cmd, input=text, text=True, check=True)
+        return True
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
+def wait_for_http(url: str, timeout: float = 60.0, interval: float = 0.5) -> bool:
+    """Poll ``url`` until it returns HTTP 200, or ``timeout`` elapses."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(url, timeout=3) as resp:
+                if resp.status == 200:
+                    return True
+        except (urllib.error.URLError, OSError):
+            pass
+        time.sleep(interval)
+    return False
 
 
 def parse_tunnel_url(text: str) -> str | None:
@@ -84,6 +139,21 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         "--colab-only",
         action="store_true",
         help="disable the local Ollama fallback (Colab worker only)",
+    )
+    parser.add_argument(
+        "--open-browser",
+        action="store_true",
+        help="open the frontend in the browser once the backend is ready",
+    )
+    parser.add_argument(
+        "--copy-tunnel",
+        action="store_true",
+        help="copy the tunnel URL to the clipboard when it appears",
+    )
+    parser.add_argument(
+        "--open-colab",
+        action="store_true",
+        help="open the Colab worker notebook in the browser when the tunnel is up",
     )
     return parser.parse_args(argv)
 
@@ -164,6 +234,7 @@ def main(argv: list[str] | None = None) -> int:
     procs: list[tuple[subprocess.Popen, str]] = []
     pumps: list[tuple[subprocess.Popen, str, object]] = []
     threads: list[threading.Thread] = []
+    no_open = os.environ.get("PG_NO_OPEN") == "1"
 
     try:
         if not args.no_backend:
@@ -203,6 +274,10 @@ def main(argv: list[str] | None = None) -> int:
                         found["url"] = url
                         print(f"[dev] TUNNEL URL: {url}")
                         print(f"[dev] set PG_COLAB_JOB_DISPATCHER_URL={url}/api")
+                        if args.copy_tunnel and not no_open and copy_to_clipboard(url):
+                            print("[dev] tunnel URL copied to clipboard")
+                        if not no_open and args.open_colab:
+                            open_in_browser(colab_notebook_url())
 
                 tunnel_cmd = [cloudflared, *build_tunnel_command(args.host, args.port)[1:]]
                 tunnel_proc = _popen(tunnel_cmd, root)
@@ -213,6 +288,14 @@ def main(argv: list[str] | None = None) -> int:
             threads.append(threading.Thread(target=_pump, args=(proc, prefix, callback), daemon=True))
         for thread in threads:
             thread.start()
+
+        if not no_open and args.open_browser:
+            def _open_when_ready() -> None:
+                health = f"http://{args.host}:{args.port}/health"
+                if wait_for_http(health, timeout=90):
+                    open_in_browser(frontend_url())
+
+            threading.Thread(target=_open_when_ready, daemon=True).start()
 
         print("[dev] running — press Ctrl+C to stop.")
         while any(proc.poll() is None for proc, _ in procs):
