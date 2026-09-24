@@ -43,9 +43,13 @@ def test_photo_journey_http(http):
 
     tool_runs = client.get(f"/api/scans/{scan_id}/tool-runs").json()
     tools = {t["tool"] for t in tool_runs["data"]}
-    assert tools == {"photo-hash", "photo-phash", "photo-exif", "photo-qr", "photo-vision"}
+    assert tools == {
+        "photo-hash", "photo-phash", "photo-exif", "photo-qr", "photo-vision", "photo-nsfw",
+    }
     vision = next(t for t in tool_runs["data"] if t["tool"] == "photo-vision")
     assert vision["status"] == "blocked"
+    nsfw = next(t for t in tool_runs["data"] if t["tool"] == "photo-nsfw")
+    assert nsfw["status"] == "blocked"  # NSFW classification is hybrid-only
 
 
 def test_photo_upload_rejects_garbage_over_http(http):

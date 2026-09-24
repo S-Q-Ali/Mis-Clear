@@ -22,8 +22,10 @@ def _png_bytes() -> bytes:
     return buf.getvalue()
 
 
-def _fake_worker(client, out: dict, stop: threading.Event) -> None:
-    while not stop.is_set():
+def _fake_worker(client, out: dict, stop: threading.Event, expected_jobs: int = 2) -> None:
+    processed = 0
+    idle = 0
+    while not stop.is_set() and processed < expected_jobs:
         nxt = client.get("/api/jobs/next")
         if nxt.status_code == 200:
             body = nxt.json()
@@ -40,16 +42,32 @@ def _fake_worker(client, out: dict, stop: threading.Event) -> None:
                     "data_deleted": True,
                 },
             ).status_code
-            stop.set()
-            return
-        if nxt.status_code == 204:
+            processed += 1
+            idle = 0
+        elif nxt.status_code == 204:
+            idle += 1
+            if idle > 60:
+                break
             time.sleep(0.05)
         else:
             stop.set()
             return
+    out["processed"] = processed
 
 
-def test_hybrid_photo_scan_reaches_colab_worker_and_produces_finding(http):
+def test_hybrid_photo_scan_reaches_colab_worker_and_produces_finding(http, monkeypatch):
+    from tools.base import ToolResult
+    from tools.photo import reverse_search as rs
+
+    def _blocked_reverse(self, target):
+        r = ToolResult(self.name)
+        r.status = "blocked"
+        r.coverage = {"sources_total": 1, "sources_checked": 0, "sources_failed": 1,
+                      "note": "test stub — no external reverse-search call"}
+        return r
+
+    monkeypatch.setattr(rs.ReverseImageSearchAdapter, "run", _blocked_reverse)
+
     client, _ = http
     worker_out: dict = {}
     stop = threading.Event()
@@ -70,7 +88,10 @@ def test_hybrid_photo_scan_reaches_colab_worker_and_produces_finding(http):
 
         tool_runs = client.get(f"/api/scans/{scan_id}/tool-runs").json()
         tools = {t["tool"] for t in tool_runs["data"]}
-        assert tools == {"photo-hash", "photo-phash", "photo-exif", "photo-qr", "photo-vision"}
+        assert tools == {
+            "photo-hash", "photo-phash", "photo-exif", "photo-qr",
+            "photo-vision", "photo-nsfw", "photo-reverse-search",
+        }
         vision = next(t for t in tool_runs["data"] if t["tool"] == "photo-vision")
         assert vision["status"] == "completed"
 
@@ -82,6 +103,7 @@ def test_hybrid_photo_scan_reaches_colab_worker_and_produces_finding(http):
         assert worker_out.get("job_id"), "worker must pick up the vision job"
         assert worker_out.get("payload", {}).get("image_base64"), "image must travel to the worker"
         assert worker_out.get("post_status") == 200
+        assert worker_out.get("processed") == 2, "vision + nsfw jobs both reach the worker"
 
         job = client.get(f"/api/jobs/{worker_out['internal_id']}").json()
         assert job["dataDeleted"] is True
