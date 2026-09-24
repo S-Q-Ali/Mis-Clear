@@ -33,7 +33,13 @@ from app.backend.schemas import (
     ToolRunOut,
     pagination_meta,
 )
-from app.backend.services import deletion_research, idempotency, identity_graph, risk_engine
+from app.backend.services import (
+    deletion_research,
+    filing_bundle,
+    idempotency,
+    identity_graph,
+    risk_engine,
+)
 from app.backend.services.scan_orchestrator import run_scan
 
 router = APIRouter(prefix="/api/scans", tags=["scans"])
@@ -286,3 +292,26 @@ def run_deletion_research(scan_id: int, db: Session = Depends(get_db)) -> Deleti
                       detail=f"deletion research: {counts['created']} created, {counts['skipped']} skipped"))
     db.commit()
     return DeletionResearchOut(scanId=scan_id, **counts)
+
+
+@router.get("/{scan_id}/filing-bundle", status_code=200)
+def download_filing_bundle(scan_id: int, db: Session = Depends(get_db)):
+    """Honest filing bundle ZIP (real rows only); never fabricates, never auto-sends."""
+    scan = db.get(m.Scan, scan_id)
+    if scan is None:
+        raise api_error(404, "NOT_FOUND", f"Scan {scan_id} not found")
+    bundle_bytes = filing_bundle.build_bundle(db, scan_id)
+    db.add(m.AuditLog(actor="user", action="read", entity_type="scan", entity_id=scan_id,
+                      detail=f"filing bundle downloaded ({len(bundle_bytes)} bytes)"))
+    db.commit()
+    return Response(
+        content=bundle_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="filing-bundle-{scan_id}.zip"',
+            "X-Filing-Bundle-Honesty": (
+                "real-rows-only: nothing fabricated, nothing auto-sent, "
+                "generatedAt is the only honest non-deterministic marker"
+            ),
+        },
+    )
