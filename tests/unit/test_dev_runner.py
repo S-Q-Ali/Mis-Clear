@@ -85,3 +85,11 @@ def test_build_tunnel_command_points_at_backend(dev):
     assert "cloudflared" in cmd[0]
     assert "tunnel" in cmd
     assert "http://127.0.0.1:8000" in cmd
+
+
+def test_backend_env_colab_only_disables_local_ollama(dev):
+    assert dev.backend_env(colab_only=True) == {"PG_OLLAMA_URL": ""}
+
+
+def test_backend_env_default_is_empty(dev):
+    assert dev.backend_env(colab_only=False) == {}

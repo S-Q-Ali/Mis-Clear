@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Privacy Guardian - one-command launcher.
+# Auto-setup (uv sync / npm install if missing), then backend + frontend.
+# Usage: ./dev [--tunnel] [--colab-only] [--no-frontend] [--no-backend] [--port N]
+set -euo pipefail
+
+cd "$(dirname "$0")"
+
+if [ ! -d ".venv" ]; then
+  echo "[setup] creating Python env (uv sync)..."
+  uv sync
+fi
+
+if [ ! -d "app/frontend/node_modules" ]; then
+  echo "[setup] installing frontend deps (npm install)..."
+  (cd app/frontend && npm install)
+fi
+
+exec uv run python scripts/dev.py "$@"

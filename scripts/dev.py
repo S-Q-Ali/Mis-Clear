@@ -58,6 +58,17 @@ def build_tunnel_command(host: str, port: int) -> list[str]:
     return ["cloudflared", "tunnel", "--url", f"http://{host}:{port}"]
 
 
+def backend_env(colab_only: bool) -> dict[str, str]:
+    """Env overrides for the backend process (merged over the current env).
+
+    ``colab_only`` clears ``PG_OLLAMA_URL`` so ``default_router`` wires no local
+    Ollama backend — heavy AI work goes to the Colab worker only.
+    """
+    if colab_only:
+        return {"PG_OLLAMA_URL": ""}
+    return {}
+
+
 def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run Privacy Guardian locally.")
     parser.add_argument("--host", default=os.environ.get("PG_HOST", "127.0.0.1"))
@@ -69,12 +80,18 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         action="store_true",
         help="expose the backend via a Cloudflare quick tunnel (for Colab)",
     )
+    parser.add_argument(
+        "--colab-only",
+        action="store_true",
+        help="disable the local Ollama fallback (Colab worker only)",
+    )
     return parser.parse_args(argv)
 
 
-def _popen(cmd: list[str], cwd: Path) -> subprocess.Popen:
+def _popen(cmd: list[str], cwd: Path, env: dict | None = None) -> subprocess.Popen:
     kwargs: dict = {
         "cwd": str(cwd),
+        "env": env,
         "stdout": subprocess.PIPE,
         "stderr": subprocess.STDOUT,
         "text": True,
@@ -145,12 +162,22 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     procs: list[tuple[subprocess.Popen, str]] = []
+    pumps: list[tuple[subprocess.Popen, str, object]] = []
     threads: list[threading.Thread] = []
 
     try:
         if not args.no_backend:
             print(f"[dev] backend  -> http://{args.host}:{args.port}  (docs: /docs)")
-            procs.append((_popen(build_backend_command(args.host, args.port), root), "[backend]"))
+            if args.colab_only:
+                print("[dev] colab-only: local Ollama fallback disabled")
+            backend_process_env = {**os.environ, **backend_env(args.colab_only)}
+            backend_proc = _popen(
+                build_backend_command(args.host, args.port),
+                root,
+                env=backend_process_env,
+            )
+            procs.append((backend_proc, "[backend]"))
+            pumps.append((backend_proc, "[backend]", None))
 
         if not args.no_frontend:
             npm = _resolve("npm")
@@ -159,7 +186,9 @@ def main(argv: list[str] | None = None) -> int:
                 raise SystemExit(1)
             print(f"[dev] frontend -> http://127.0.0.1:{FRONTEND_PORT}")
             frontend_cmd = [npm, *build_frontend_command()[1:]]
-            procs.append((_popen(frontend_cmd, root / "app" / "frontend"), "[frontend]"))
+            frontend_proc = _popen(frontend_cmd, root / "app" / "frontend")
+            procs.append((frontend_proc, "[frontend]"))
+            pumps.append((frontend_proc, "[frontend]", None))
 
         if args.tunnel:
             cloudflared = _resolve("cloudflared")
@@ -176,12 +205,12 @@ def main(argv: list[str] | None = None) -> int:
                         print(f"[dev] set PG_COLAB_JOB_DISPATCHER_URL={url}/api")
 
                 tunnel_cmd = [cloudflared, *build_tunnel_command(args.host, args.port)[1:]]
-                proc = _popen(tunnel_cmd, root)
-                procs.append((proc, "[tunnel]"))
-                threads.append(threading.Thread(target=_pump, args=(proc, "[tunnel]", _on_line), daemon=True))
+                tunnel_proc = _popen(tunnel_cmd, root)
+                procs.append((tunnel_proc, "[tunnel]"))
+                pumps.append((tunnel_proc, "[tunnel]", _on_line))
 
-        for proc, prefix in procs:
-            threads.append(threading.Thread(target=_pump, args=(proc, prefix), daemon=True))
+        for proc, prefix, callback in pumps:
+            threads.append(threading.Thread(target=_pump, args=(proc, prefix, callback), daemon=True))
         for thread in threads:
             thread.start()
 
