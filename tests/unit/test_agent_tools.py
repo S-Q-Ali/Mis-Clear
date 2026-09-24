@@ -128,6 +128,25 @@ def test_build_agent_tools_spec_shape():
     assert "target" in spec.args
 
 
+def test_build_agent_tools_wires_breach_base_url():
+    calls: list[str] = []
+
+    class FakeClient:
+        def get(self, url, timeout=None):
+            calls.append(str(url))
+            return httpx.Response(404, text="")
+
+    tools = build_agent_tools(
+        breach_base_url="https://api.example/range",
+        client_factory=lambda: FakeClient(),  # type: ignore[arg-type]
+    )
+    out = tools["breach_check"].runner(passwords=["probe-pw"])
+    assert out["ok"] is False
+    assert out["blocked"] is True
+    assert any(u.startswith("https://api.example/range/") for u in calls)
+    assert all(str(u).count("/") <= 4 for u in calls)  # only prefix path, no params
+
+
 def test_finding_to_json_is_json_safe_and_truncates():
     from tools.base import ToolFinding
 

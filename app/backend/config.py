@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     agent_model: str = ""
     # Requests/minute per client for /api/agent/chat (S7 hardening).
     agent_rate_limit_per_minute: int = 20
+    # k-anonymity breach range API (e.g. https://api.pwnedpasswords.com/range).
+    # Empty = breach_check reports "not configured" (SPEC-self-data).
+    breach_api_url: str = ""
 
     # OSINT tool adapters (Phase 6)
     osint_enabled: bool = True

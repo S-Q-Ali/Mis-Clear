@@ -65,6 +65,7 @@ def _build_tools(hybrid: bool) -> dict[str, Any]:
         router=default_router(),
         strict_local=not hybrid,
         hybrid_allowed=hybrid,
+        breach_base_url=settings.breach_api_url or None,
     )
 
 
