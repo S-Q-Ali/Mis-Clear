@@ -497,6 +497,23 @@ nav {
   word-break: break-all;
 }
 
+.chat-step.confirm {
+  border-left-color: var(--yellow);
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.confirm-ref { font-size: 12px; word-break: break-all; }
+
 .chat-answer {
   background: rgba(61, 123, 253, 0.1);
   border: 1px solid var(--accent-dim);

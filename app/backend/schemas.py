@@ -326,6 +326,19 @@ class ConversationDetailOut(ConversationOut):
     messages: list[AgentMessageOut]
 
 
+# Confirm-gated removal (SPEC-removal-flow). decision is a strict enum: the
+# API only ever approves or denies; nothing else can be expressed.
+class AgentConfirmIn(BaseModel):
+    conversationId: int
+    itemIndex: int
+    decision: Literal["approve", "deny"]
+
+
+class AgentConfirmOut(Camelised):
+    handled: bool = True
+    actionId: int | None = None
+
+
 def pagination_meta(total_items: int, page: int, page_size: int) -> Pagination:
     total_pages = max(1, (total_items + page_size - 1) // page_size)
     if total_items == 0:

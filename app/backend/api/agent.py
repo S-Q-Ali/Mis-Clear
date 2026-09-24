@@ -25,6 +25,8 @@ from app.backend.database.engine import get_db
 from app.backend.errors import api_error
 from app.backend.schemas import (
     AgentChatIn,
+    AgentConfirmIn,
+    AgentConfirmOut,
     AgentMessageOut,
     AgentStatusOut,
     ConversationDetailOut,
@@ -40,6 +42,10 @@ from app.backend.services.agent.conversation_store import (
 from app.backend.services.agent.loop import run_agent
 from app.backend.services.agent.model import AgentResult
 from app.backend.services.agent.registry import build_agent_tools
+from app.backend.services.agent.removal_flow import (
+    action_from_proposal,
+    confirm_proposals_of,
+)
 
 router = APIRouter(prefix="/api/agent", tags=["agent"])
 
@@ -165,3 +171,51 @@ def conversation_detail(conversation_id: int, db: Session = Depends(get_db)):
     detail = ConversationDetailOut.model_validate(conv)
     detail.messages = [AgentMessageOut.model_validate(msg) for msg in conv.messages]
     return detail
+
+
+@router.post("/confirm")
+def agent_confirm(body: AgentConfirmIn, db: Session = Depends(get_db)):
+    """Approve/deny one agent-proposed removal.
+
+    Proposals are read back from the PERSISTED conversation steps — the client
+    supplies only an index, never a URL. No confirm event -> no action.
+    """
+    from app.backend import models as m
+
+    conv = get_conversation(db, body.conversationId)
+    if conv is None:
+        raise api_error(404, "NOT_FOUND", "Conversation not found")
+
+    agent_messages = [msg for msg in conv.messages if msg.role == "agent"]
+    if not agent_messages:
+        raise api_error(409, "NO_AGENT_RUN", "Conversation has no agent run to confirm.")
+    proposals = confirm_proposals_of(agent_messages[-1].steps)
+    if not 0 <= body.itemIndex < len(proposals):
+        raise api_error(404, "ITEM_NOT_FOUND", "That proposal is not in this conversation.")
+
+    proposal = proposals[body.itemIndex]
+    action_id: int | None = None
+    if body.decision == "approve":
+        action = action_from_proposal(db, conv.id, proposal)
+        action_id = action.id
+        db.add(
+            m.AuditLog(
+                actor="user",
+                action="approve",
+                entity_type="agent_removal",
+                entity_id=action_id,
+                detail=f"removal approved from conversation {conv.id}: {proposal['url']}",
+            )
+        )
+    else:
+        db.add(
+            m.AuditLog(
+                actor="user",
+                action="deny",
+                entity_type="agent_removal",
+                entity_id=conv.id,
+                detail=f"removal denied from conversation {conv.id}: {proposal['url']}",
+            )
+        )
+    db.commit()
+    return AgentConfirmOut(handled=True, actionId=action_id)

@@ -111,6 +111,15 @@ export const getAgentStatus = () => api<AgentStatus>('/api/agent/status')
 export const getAgentConversations = () => api<AgentConversation[]>('/api/agent/conversations')
 export const getAgentConversation = (id: number) =>
   api<AgentConversationDetail>(`/api/agent/conversations/${id}`)
+export const confirmAgentRemoval = (
+  conversationId: number,
+  itemIndex: number,
+  decision: 'approve' | 'deny',
+) =>
+  api<{ handled: boolean; actionId: number | null }>('/api/agent/confirm', {
+    method: 'POST',
+    json: { conversationId, itemIndex, decision },
+  })
 
 function parseSseFrame(frame: string): AgentStreamEvent | null {
   let kind = ''

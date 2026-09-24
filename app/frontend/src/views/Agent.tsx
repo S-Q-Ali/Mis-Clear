@@ -24,7 +24,22 @@ function Evidence({ urls }: { urls: string[] }) {
   )
 }
 
-function StepCard({ evt }: { evt: AgentStreamEvent }) {
+interface ConfirmHandlers {
+  convId: number | null
+  decided: Record<string, 'approved' | 'denied'>
+  busy: boolean
+  onDecide: (idx: number, decision: 'approve' | 'deny') => void
+}
+
+function agentIndexMap(events: AgentStreamEvent[]): Array<{ evt: AgentStreamEvent; index: number }> {
+  let idx = -1
+  return events.map((evt) => {
+    if (evt.kind !== 'user' && evt.kind !== 'start' && evt.kind !== 'done') idx += 1
+    return { evt, index: idx }
+  })
+}
+
+function StepCard({ evt, stepIndex, confirm }: { evt: AgentStreamEvent; stepIndex?: number; confirm?: ConfirmHandlers }) {
   if (evt.kind === 'start' || evt.kind === 'done' || evt.kind === 'user') return null
   if (evt.kind === 'thought') {
     return (
@@ -60,10 +75,35 @@ function StepCard({ evt }: { evt: AgentStreamEvent }) {
     )
   }
   if (evt.kind === 'confirm') {
+    const key = evt.data?.url as string | undefined
+    const decided = stepIndex !== undefined && confirm
+      ? confirm.decided[`${confirm.convId}:${stepIndex}`]
+      : undefined
+    const disabled = !confirm || confirm.busy || decided !== undefined || confirm.convId === null
     return (
-      <div className="chat-step">
+      <div className="chat-step confirm">
         <span className="step-tag tool">confirmation required</span>
         <span className="step-detail">{evt.detail}</span>
+        <Evidence urls={evt.evidence} />
+        <div className="confirm-actions">
+          <button
+            type="button"
+            className="btn btn-sm"
+            disabled={disabled}
+            onClick={() => stepIndex !== undefined && confirm?.onDecide(stepIndex, 'approve')}
+          >
+            {decided === 'approved' ? 'Approved · created pending action' : 'Approve removal'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost"
+            disabled={disabled}
+            onClick={() => stepIndex !== undefined && confirm?.onDecide(stepIndex, 'deny')}
+          >
+            {decided === 'denied' ? 'Denied · no action' : 'Deny'}
+          </button>
+          {key && <span className="muted confirm-ref">{key}</span>}
+        </div>
       </div>
     )
   }
@@ -87,6 +127,8 @@ export default function Agent() {
   const [status, setStatus] = useState<AgentStatus | null>(null)
   const [events, setEvents] = useState<AgentStreamEvent[]>([])
   const [done, setDone] = useState<AgentDone | null>(null)
+  const [convId, setConvId] = useState<number | null>(null)
+  const [decided, setDecided] = useState<Record<string, 'approved' | 'denied'>>({})
   const [draft, setDraft] = useState('')
   const [approveHybrid, setApproveHybrid] = useState(false)
   const [running, setRunning] = useState(false)
@@ -98,12 +140,26 @@ export default function Agent() {
     api.getAgentStatus().then(setStatus).catch(() => {})
   }, [])
 
+  const decide = async (stepIndex: number, decision: 'approve' | 'deny') => {
+    if (convId === null || running) return
+    try {
+      await api.confirmAgentRemoval(convId, stepIndex, decision)
+      setDecided((prev) => ({
+        ...prev,
+        [`${convId}:${stepIndex}`]: decision === 'approve' ? 'approved' : 'denied',
+      }))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    }
+  }
+
   const send = async () => {
     const prompt = draft.trim()
     if (!prompt || running) return
     setDraft('')
     setError('')
     setDone(null)
+    setConvId(null)
     setRunning(true)
     setEvents((prev) => [
       ...prev,
@@ -111,6 +167,7 @@ export default function Agent() {
     ])
     try {
       const result = await api.streamAgentChat(prompt, approveHybrid, (evt) => {
+        if (evt.conversationId !== undefined) setConvId(evt.conversationId)
         setEvents((prev) => [...prev, evt])
       })
       setDone(result)
@@ -166,8 +223,13 @@ export default function Agent() {
 
       <div className="chat-layout">
         <div className="chat-log">
-          {events.map((evt, i) => (
-            <StepCard key={`${evt.kind}-${i}`} evt={evt} />
+          {agentIndexMap(events).map((entry, i) => (
+            <StepCard
+              key={`${entry.evt.kind}-${i}`}
+              evt={entry.evt}
+              stepIndex={entry.evt.kind === 'confirm' ? entry.index : undefined}
+              confirm={{ convId, decided, busy: running, onDecide: decide }}
+            />
           ))}
           {running && <Spinner />}
           {finalAnswer && !running && <div className="chat-answer">{finalAnswer}</div>}

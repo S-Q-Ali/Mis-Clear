@@ -14,6 +14,7 @@ import re
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
+from urllib.parse import urlsplit
 
 from app.backend.config import settings
 from app.backend.services.agent.model import AgentAction, AgentResult, AgentStep
@@ -90,6 +91,54 @@ def evidence_urls(result: dict[str, Any], limit: int = 5) -> list[str]:
         if url and url not in urls:
             urls.append(url)
     return urls[:limit]
+
+
+_LOCAL_HOSTS = {"localhost", "127.0.0.1", "0.0.0.0", "::1"}
+
+
+def _hostname_of(url: str) -> str | None:
+    try:
+        host = urlsplit(url if "//" in url else f"//{url}").hostname
+    except ValueError:
+        return None
+    if not host:
+        return None
+    return host.lower().rstrip(".")
+
+
+def _base_domain(hostname: str) -> str:
+    parts = hostname.split(".")
+    if len(parts) >= 2:
+        return ".".join(parts[-2:])
+    return hostname
+
+
+def propose_removals(output: dict[str, Any]) -> list[dict[str, str]]:
+    """Deterministic mapping from tool evidence to removal proposals.
+
+    Never AI: only real URLs returned by tools, never names the model invented.
+    Local/loopback hosts are never removal targets.
+    """
+    proposals: list[dict[str, str]] = []
+    for f in output.get("findings", []) or []:
+        if not isinstance(f, dict):
+            continue
+        url = f.get("url")
+        if not isinstance(url, str) or not url.strip():
+            continue
+        hostname = _hostname_of(url)
+        if not hostname or hostname in _LOCAL_HOSTS:
+            continue
+        target = f.get("matched") or f.get("name") or f.get("title") or url
+        proposals.append(
+            {
+                "target": str(target)[:200],
+                "org": _base_domain(hostname),
+                "url": url,
+                "evidence": url,
+            }
+        )
+    return proposals
 
 
 def run_agent(
@@ -216,6 +265,20 @@ def run_agent(
                     data=output,
                 )
             )
+            proposals = propose_removals(output)
+            if proposals:
+                start = len(result.steps)
+                for proposal in proposals:
+                    add(
+                        AgentStep(
+                            kind="confirm",
+                            label="removal",
+                            detail=f"Request removal of '{proposal['target']}' from {proposal['org']}",
+                            data=proposal,
+                            evidence=[proposal["url"]],
+                        )
+                    )
+                result.confirm_required.extend(str(i) for i in range(start, len(result.steps)))
             history.append(f"tool {call.tool} -> {json.dumps(output, sort_keys=True)[:800]}")
         add(
             AgentStep(kind="error", label="step limit", detail=f"Step budget ({budget}) exhausted.")
