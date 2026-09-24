@@ -49,6 +49,22 @@ optional approved Colab worker for heavy vision/OCR (wired end-to-end).
 
 ## Quickstart
 
+**One command** (Git Bash: `./dev` · PowerShell/cmd: `.\dev.cmd`) — auto-installs
+deps if missing, then runs the backend and frontend together:
+
+```
+./dev                      # backend :8000 + frontend :5173
+./dev --tunnel             # + Cloudflare quick tunnel for the Colab worker
+./dev --colab-only         # disable the local Ollama fallback (Colab worker only)
+```
+
+Flags: `--tunnel`, `--colab-only`, `--no-frontend`, `--no-backend`, `--port N`.
+Both servers stream prefixed logs and shut down on Ctrl+C. The underlying
+runner is `scripts/dev.py` (same flags) if you prefer
+`uv run python scripts/dev.py`.
+
+Manual / step-by-step:
+
 ```
 uv sync
 cp .env.example .env                      # optional overrides
@@ -57,40 +73,31 @@ uv run uvicorn app.backend.main:app --host 127.0.0.1 --port 8000   # backend
 cd app/frontend && npm install && npm run dev     # frontend (5173)
 ```
 
-Or run **both together** with one command (any shell — PowerShell, Git Bash, cmd):
-
-```
-uv run python scripts/dev.py
-```
-
-`scripts/dev.py` runs the backend and frontend together, streams both logs,
-and shuts both down on Ctrl+C. Add `--tunnel` to also expose the backend via a
-Cloudflare quick tunnel (see below), `--no-frontend` / `--no-backend` to run
-one, or `--port N` to change the backend port.
-
 Or use the PowerShell scripts: `scripts/setup.ps1`, `scripts/start.ps1`,
 `scripts/stop.ps1`. In Git Bash run them via
 `powershell -ExecutionPolicy Bypass -File ./scripts/start.ps1`.
 
-### Heavy AI on the Colab GPU worker
+### Heavy AI on the Colab GPU worker (no local Ollama needed)
 
-AI models (reasoning `qwen3:8b`, vision `gemma3:4b`) default to **Colab-first
-with a local-Ollama fallback** once a Colab endpoint is configured:
+AI models (reasoning `qwen3:8b`, vision `gemma3:4b`) run on the **Colab GPU**
+(`hybrid`). Local Ollama is only an optional fallback — skip it entirely with
+`--colab-only`, or run `./dev --tunnel --colab-only`:
 
 1. Run `colab/privacy_guardian_worker.ipynb` in Colab (7 sections: install Ollama,
    pull both models, clone repo, probe capabilities, run the dispatch loop).
-2. Tunnel the **job dispatcher** on the laptop
-   (`cloudflared tunnel --url http://127.0.0.1:8000`, or just run
-   `uv run python scripts/dev.py --tunnel` to start it alongside the app and
-   print the URL) and the **Ollama AI** port in Colab (notebook cell 7 already
-   starts a `cloudflared` tunnel to 11434), then add both URLs to `.env`:
+2. Start the app with `./dev --tunnel --colab-only` (or
+   `uv run python scripts/dev.py --tunnel --colab-only`). It prints the laptop
+   dispatcher URL; the Colab notebook cell 7 prints the Ollama URL. Add both to
+   `.env`:
    ```
-   PG_COLAB_OLLAMA_URL=https://<ollama-tunnel>
-   PG_COLAB_JOB_DISPATCHER_URL=https://<dispatcher>/api
+   PG_COLAB_OLLAMA_URL=https://<ollama-tunnel>          # direct AI inference
+   PG_COLAB_JOB_DISPATCHER_URL=https://<dispatcher>/api # job transport
    ```
-3. Restart the backend. New scans now default to `hybrid` and heavy vision/OCR
-   routes to Colab; if Colab is unreachable the scan falls back to local Ollama
-   instead of failing (details in `docs/COLAB_GPU_ARCHITECTURE.md`).
+3. Restart the backend. New scans default to `hybrid` and heavy vision/OCR
+   routes to Colab. Without `--colab-only`, a down Colab falls back to local
+   Ollama; with `--colab-only` there is no fallback (honest `blocked`, never a
+   fabricated result). Details in `docs/COLAB_GPU_ARCHITECTURE.md`.
+
 
 ## Layout
 
