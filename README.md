@@ -63,6 +63,18 @@ Both servers stream prefixed logs and shut down on Ctrl+C. The underlying
 runner is `scripts/dev.py` (same flags) if you prefer
 `uv run python scripts/dev.py`.
 
+**One click (Windows, Colab mode):** double-click `start.cmd` (or run
+`powershell -ExecutionPolicy Bypass -File .\create-shortcut.ps1` once for a
+Desktop shortcut). It auto-installs missing deps, starts the backend +
+frontend + tunnel, opens the frontend in the browser, copies the tunnel
+URL to the clipboard, and opens the Colab worker notebook. Press Ctrl+C to
+stop everything. Colab itself still needs manual steps (open notebook, log
+in, run cells, paste the dispatcher URL into cell 1).
+
+Flags: `--tunnel`, `--colab-only`, `--no-frontend`, `--no-backend`, `--port N`,
+`--open-browser`, `--copy-tunnel`, `--open-colab` (set `PG_NO_OPEN=1` to
+suppress auto-open/copy).
+
 Manual / step-by-step:
 
 ```
