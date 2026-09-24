@@ -26,7 +26,7 @@ export default function Scans({ onOpen }: Props) {
   }, [])
 
   const create = async () => {
-    if (!form.targetValue.trim()) { setError('Target value required'); return }
+    if (form.targetType !== 'image' && !form.targetValue.trim()) { setError('Target value required'); return }
     setBusy('Creating scan…')
     try {
       const scan = await api.createScan(form.targetType, form.targetValue.trim(), form.scanMode)
