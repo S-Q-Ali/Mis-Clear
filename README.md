@@ -57,7 +57,20 @@ uv run uvicorn app.backend.main:app --host 127.0.0.1 --port 8000   # backend
 cd app/frontend && npm install && npm run dev     # frontend (5173)
 ```
 
-Or use the scripts: `scripts/setup.ps1`, `scripts/start.ps1`, `scripts/stop.ps1`.
+Or run **both together** with one command (any shell — PowerShell, Git Bash, cmd):
+
+```
+uv run python scripts/dev.py
+```
+
+`scripts/dev.py` runs the backend and frontend together, streams both logs,
+and shuts both down on Ctrl+C. Add `--tunnel` to also expose the backend via a
+Cloudflare quick tunnel (see below), `--no-frontend` / `--no-backend` to run
+one, or `--port N` to change the backend port.
+
+Or use the PowerShell scripts: `scripts/setup.ps1`, `scripts/start.ps1`,
+`scripts/stop.ps1`. In Git Bash run them via
+`powershell -ExecutionPolicy Bypass -File ./scripts/start.ps1`.
 
 ### Heavy AI on the Colab GPU worker
 
@@ -67,9 +80,10 @@ with a local-Ollama fallback** once a Colab endpoint is configured:
 1. Run `colab/privacy_guardian_worker.ipynb` in Colab (7 sections: install Ollama,
    pull both models, clone repo, probe capabilities, run the dispatch loop).
 2. Tunnel the **job dispatcher** on the laptop
-   (`cloudflared tunnel --url http://127.0.0.1:8000`) and the **Ollama AI** port
-   in Colab (notebook cell 7 already starts a `cloudflared` tunnel to 11434), then
-   add both URLs to `.env`:
+   (`cloudflared tunnel --url http://127.0.0.1:8000`, or just run
+   `uv run python scripts/dev.py --tunnel` to start it alongside the app and
+   print the URL) and the **Ollama AI** port in Colab (notebook cell 7 already
+   starts a `cloudflared` tunnel to 11434), then add both URLs to `.env`:
    ```
    PG_COLAB_OLLAMA_URL=https://<ollama-tunnel>
    PG_COLAB_JOB_DISPATCHER_URL=https://<dispatcher>/api
