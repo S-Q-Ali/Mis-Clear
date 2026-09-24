@@ -285,6 +285,47 @@ PAGE_SIZE_DEFAULT = 20
 PAGE_SIZE_MAX = 100
 
 
+# ---------- Agent (SPEC-agent-api) ----------
+
+
+class AgentChatIn(BaseModel):
+    message: str = Field(min_length=1, max_length=4000)
+    # Explicit per-run approval to let third-party-network tools run
+    # (reverse image search, breach range queries).
+    approveHybrid: bool = False
+    scanId: int | None = None
+
+
+class AgentStatusOut(BaseModel):
+    enabled: bool
+    configured: bool
+    backend: str = "none"
+
+
+class AgentMessageOut(Camelised):
+    id: int
+    role: str
+    content: str | None = None
+    blocked: bool = False
+    steps: list[dict[str, Any]] | None = None
+    answer: str | None = None
+    createdAt: datetime = forward(("createdAt", "created_at"))
+
+
+class ConversationOut(Camelised):
+    id: int
+    title: str
+    scanId: int | None = forward(("scanId", "scan_id"))
+    status: str
+    hybridApproved: bool = forward(("hybridApproved", "hybrid_approved"))
+    createdAt: datetime = forward(("createdAt", "created_at"))
+    updatedAt: datetime = forward(("updatedAt", "updated_at"))
+
+
+class ConversationDetailOut(ConversationOut):
+    messages: list[AgentMessageOut]
+
+
 def pagination_meta(total_items: int, page: int, page_size: int) -> Pagination:
     total_pages = max(1, (total_items + page_size - 1) // page_size)
     if total_items == 0:

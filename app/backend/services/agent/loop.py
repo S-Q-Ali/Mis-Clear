@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
@@ -98,14 +99,21 @@ def run_agent(
     *,
     max_steps: int | None = None,
     brain_timeout: float | None = None,
+    on_step: Callable[[AgentStep], None] | None = None,
 ) -> AgentResult:
     """Run the ReAct loop. Never raises; always returns an AgentResult."""
     budget = int(max_steps if max_steps is not None else settings.agent_max_steps)
     per_step = brain_timeout if brain_timeout is not None else settings.agent_step_timeout_seconds
     result = AgentResult()
+
+    def add(step: AgentStep) -> None:
+        result.steps.append(step)
+        if on_step is not None:
+            on_step(step.model_copy(deep=True))
+
     goal = (goal or "").strip()
     if not goal:
-        result.steps.append(AgentStep(kind="error", label="empty goal"))
+        add(AgentStep(kind="error", label="empty goal"))
         result.answer = "No goal provided."
         return result
 
@@ -113,7 +121,7 @@ def run_agent(
 
     if not getattr(brain, "available", lambda: True)():
         result.blocked = True
-        result.steps.append(
+        add(
             AgentStep(
                 kind="error",
                 label="brain unavailable",
@@ -136,7 +144,7 @@ def run_agent(
                 future = executor.submit(brain.complete, SYSTEM_PROMPT, prompt)
                 text = future.result(timeout=per_step)
             except Exception as exc:  # noqa: BLE001 — loop boundary: never raise to the API
-                result.steps.append(
+                add(
                     AgentStep(
                         kind="error",
                         label="brain failure",
@@ -148,7 +156,7 @@ def run_agent(
 
             action = parse_action(text)
             if action is None:
-                result.steps.append(
+                add(
                     AgentStep(
                         kind="error",
                         label="parse failure",
@@ -158,18 +166,18 @@ def run_agent(
                 result.answer = "Agent stopped: cannot parse model reply."
                 return result
 
-            result.steps.append(AgentStep(kind="thought", label="thought", detail=action.thought or ""))
+            add(AgentStep(kind="thought", label="thought", detail=action.thought or ""))
 
             if action.stop or action.action is None:
                 result.answer = action.answer or "Done."
                 if action.answer:
-                    result.steps.append(AgentStep(kind="thought", label="answer", detail=action.answer))
+                    add(AgentStep(kind="thought", label="answer", detail=action.answer))
                 return result
 
             call = action.action
             spec = tools.get(call.tool)
             if spec is None:
-                result.steps.append(
+                add(
                     AgentStep(
                         kind="error",
                         label="unknown tool",
@@ -181,7 +189,7 @@ def run_agent(
 
             args = validate_args(spec, call.args)
             if args is None:
-                result.steps.append(
+                add(
                     AgentStep(
                         kind="error",
                         label="invalid args",
@@ -191,7 +199,7 @@ def run_agent(
                 result.answer = f"Agent stopped: invalid arguments for '{call.tool}'."
                 return result
 
-            result.steps.append(
+            add(
                 AgentStep(kind="tool", label=call.tool, detail=json.dumps(args, sort_keys=True))
             )
             try:
@@ -199,7 +207,7 @@ def run_agent(
             except Exception as exc:  # noqa: BLE001 — runner boundary; adapters promise JSON, stay defensive
                 output = {"ok": False, "note": f"{exc.__class__.__name__}: {exc}"}
             output = _json_clean(output)
-            result.steps.append(
+            add(
                 AgentStep(
                     kind="result",
                     label=call.tool,
@@ -209,7 +217,7 @@ def run_agent(
                 )
             )
             history.append(f"tool {call.tool} -> {json.dumps(output, sort_keys=True)[:800]}")
-        result.steps.append(
+        add(
             AgentStep(kind="error", label="step limit", detail=f"Step budget ({budget}) exhausted.")
         )
         result.answer = "Agent stopped: step budget exhausted."

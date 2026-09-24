@@ -234,3 +234,41 @@ class IdempotencyKey(Base):
     request_hash: Mapped[str] = mapped_column(String(64))
     scan_id: Mapped[int | None] = mapped_column(ForeignKey("scans.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class AgentConversation(Base):
+    """A chat session with the agentic investigator (SPEC-agent-api)."""
+
+    __tablename__ = "agent_conversations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(255), default="Agent chat")
+    scan_id: Mapped[int | None] = mapped_column(ForeignKey("scans.id"), nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    # active|complete|blocked|error
+    hybrid_approved: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+    messages: Mapped[list[AgentMessage]] = relationship(
+        back_populates="conversation", order_by="AgentMessage.id"
+    )
+
+
+class AgentMessage(Base):
+    """One persisted step/answer of an agent chat (secrets redacted on write)."""
+
+    __tablename__ = "agent_messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    conversation_id: Mapped[int] = mapped_column(
+        ForeignKey("agent_conversations.id"), index=True
+    )
+    role: Mapped[str] = mapped_column(String(20))  # user|agent
+    content: Mapped[str | None] = mapped_column(Text, nullable=True)
+    blocked: Mapped[bool] = mapped_column(Boolean, default=False)
+    steps: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON, nullable=True)
+    answer: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+    conversation: Mapped[AgentConversation] = relationship(back_populates="messages")

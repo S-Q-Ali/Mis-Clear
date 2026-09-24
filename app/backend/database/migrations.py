@@ -87,7 +87,49 @@ V4_ACTION_EXECUTIONS = Migration(
         "FOREIGN KEY(action_id) REFERENCES actions(id))"
     ),
 )
-MIGRATIONS: list[Migration] = [BASELINE, V2_IDEMPOTENCY, V3_JOB_SCAN_FK, V4_ACTION_EXECUTIONS]
+def _apply_v5_agent_schema(engine: Engine) -> None:
+    with engine.begin() as conn:
+        conn.exec_driver_sql(
+            "CREATE TABLE IF NOT EXISTS agent_conversations ("
+            "id INTEGER PRIMARY KEY, "
+            "title TEXT NOT NULL DEFAULT 'Agent chat', "
+            "scan_id INTEGER, "
+            "status TEXT NOT NULL DEFAULT 'active', "
+            "hybrid_approved INTEGER NOT NULL DEFAULT 0, "
+            "created_at TEXT DEFAULT (datetime('now')), "
+            "updated_at TEXT DEFAULT (datetime('now')), "
+            "FOREIGN KEY(scan_id) REFERENCES scans(id))"
+        )
+        conn.exec_driver_sql(
+            "CREATE TABLE IF NOT EXISTS agent_messages ("
+            "id INTEGER PRIMARY KEY, "
+            "conversation_id INTEGER NOT NULL, "
+            "role TEXT NOT NULL, "
+            "content TEXT, "
+            "blocked INTEGER NOT NULL DEFAULT 0, "
+            "steps TEXT, "
+            "answer TEXT, "
+            "created_at TEXT DEFAULT (datetime('now')), "
+            "FOREIGN KEY(conversation_id) REFERENCES agent_conversations(id))"
+        )
+        conn.exec_driver_sql(
+            "CREATE INDEX IF NOT EXISTS idx_agent_messages_conversation "
+            "ON agent_messages(conversation_id)"
+        )
+
+
+V5_AGENT_CONVERSATIONS = Migration(
+    5,
+    "agent_conversations + agent_messages (SPEC-agent-api)",
+    fn=_apply_v5_agent_schema,
+)
+MIGRATIONS: list[Migration] = [
+    BASELINE,
+    V2_IDEMPOTENCY,
+    V3_JOB_SCAN_FK,
+    V4_ACTION_EXECUTIONS,
+    V5_AGENT_CONVERSATIONS,
+]
 
 
 def current_version(engine: Engine) -> int:

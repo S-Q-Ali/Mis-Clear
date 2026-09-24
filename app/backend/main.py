@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.backend.api.actions import router as actions_router
+from app.backend.api.agent import router as agent_router
 from app.backend.api.findings import router as findings_router
 from app.backend.api.health import router as health_router
 from app.backend.api.jobs import router as jobs_router
@@ -47,6 +48,7 @@ def create_app() -> FastAPI:
     app.include_router(reports_router)
     app.include_router(logs_router)
     app.include_router(settings_router)
+    app.include_router(agent_router)
     return app
 
 
