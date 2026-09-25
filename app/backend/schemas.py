@@ -300,6 +300,8 @@ class AgentStatusOut(BaseModel):
     enabled: bool
     configured: bool
     backend: str = "none"
+    # Resolved brain model (PG_AGENT_MODEL override, or the router's default).
+    model: str = ""
 
 
 class AgentMessageOut(Camelised):

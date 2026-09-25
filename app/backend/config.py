@@ -34,7 +34,10 @@ class Settings(BaseSettings):
     # Agentic self-data investigator (SPEC-agent-*)
     agent_enabled: bool = True
     agent_max_steps: int = 20
-    agent_step_timeout_seconds: float = 25.0
+    # Per-step brain budget. Tuned for a remote 27B brain on Colab (Q4_K_M@T4
+    # cold-load + generation can exceed 30-90s per step); raise via
+    # PG_AGENT_STEP_TIMEOUT_SECONDS for very slow GPUs.
+    agent_step_timeout_seconds: float = 120.0
     # Optional model override for the agent brain; empty = router's reasoning model.
     agent_model: str = ""
     # Requests/minute per client for /api/agent/chat (S7 hardening).

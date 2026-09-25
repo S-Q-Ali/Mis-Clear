@@ -95,6 +95,19 @@ def test_status_endpoint(client):
     assert r.status_code == 200
     assert r.json()["enabled"] is True
     assert r.json()["backend"] == "none"
+    assert r.json()["model"] == "qwen3:8b"
+
+
+def test_status_model_mirrors_agent_model_override(client, monkeypatch):
+    """PG_AGENT_MODEL override must be surfaced so the 27B brain is verifiable."""
+    import app.backend.api.agent as api
+    import app.backend.config as cfg
+
+    cfg.settings.agent_model = "hf.co/JonathanColetti/Qwen3.8-27B-Uncensored-GGUF:Q4_K_M"
+    monkeypatch.setattr(api, "settings", cfg.settings)
+    r = client.get("/api/agent/status")
+    assert r.status_code == 200
+    assert r.json()["model"] == cfg.settings.agent_model
 
 
 def test_chat_stream_stop_immediately(client, monkeypatch):

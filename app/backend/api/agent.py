@@ -92,6 +92,7 @@ def agent_status() -> AgentStatusOut:
         enabled=settings.agent_enabled,
         configured=bool(settings.colab_ollama_url or settings.ollama_url),
         backend=_build_brain().backend_name,
+        model=settings.agent_model or settings.ollama_reasoning_model,
     )
 
 
