@@ -87,13 +87,16 @@ Tested with synthetic data only (never real personal data).
    (7 sections):
    1. **Configuration** — set `COLAB_JOB_DISPATCHER_URL` to the laptop tunnel.
    2. **Install Ollama** — binary install + server on `0.0.0.0:11434`.
-   3. **Download AI models** — default `qwen3:8b` + `gemma3:4b` (GPU).
+   3. **Download AI models** — default `qwen3:8b` + `gemma3:4b` + uncensored 27B
+      brain (`qwen3.8-27b-unc` alias, quant via `UNCENSORED_QUANT`: T4 `Q4_K_M`,
+      L4 `Q5_K_M`, A100 `Q6_K`/`Q8_0`).
    4. **Clone repo + deps** — `git clone` + `sys.path` + `httpx`.
    5. **Capability probe** — advertises GPU/CPU/models.
    6. **Dispatch loop** — poll-proc-ack (`GET /jobs/next` → process →
       `POST /jobs/{job_id}/result`). Refuses to run without a dispatcher URL.
    7. **Expose Colab Ollama (optional)** — `cloudflared` tunnel to port 11434;
-      prints the `https://<...>.trycloudflare.com` URL for `PG_COLAB_OLLAMA_URL`.
+      prints the `https://<...>.trycloudflare.com` URL for `PG_COLAB_OLLAMA_URL`
+      and reminders `PG_AGENT_MODEL=qwen3.8-27b-unc` for the agent brain.
 2. Two tunnels, one per direction:
    - **Job dispatcher** — created on the **laptop**, points at `127.0.0.1:8000`
      (e.g. `cloudflared tunnel --url http://127.0.0.1:8000`). Colab polls it via

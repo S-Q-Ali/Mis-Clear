@@ -20,6 +20,7 @@ Threat list for Privacy Guardian (living doc; grows with phases).
 | T14 | Agent auto-removal / state change | agent confirm flow | **no action without a per-item confirm event**: proposals are read back from persisted conversation steps, `POST /confirm` only `approve|deny`, actions stay `pending` behind the existing approval UI; security tests assert chat never creates actions | 15 |
 | T15 | Secret/plaintext in agent audit trail | conversation persistence | tool args that look like secrets redacted to `***` before DB write; breach path emits only k-anonymity prefix + suffix count (no plaintext, no full hash); **verified by persist + security tests** | 15 |
 | T16 | Third-party-network abuse by agent | agent tools | reverse-image search and breach range API gated behind explicit hybrid approval (`approveHybrid`); local-only runs report blocked; **verified by gate tests** | 15 |
+| T17 | Uncensored/abliterated brain misalignment | agent brain (user-chosen `PG_AGENT_MODEL`, e.g. Qwen3.8-27B-Uncensored, refusals 98/100→12/100) | model output treated as **data, never instructions**: tool allowlist (+ arg allowlist) — no shell/URL/exec; results wrapped `<untrusted>`; findings/evidence = tool outputs only; AI text never feeds the deterministic risk score; removals still per-item human `approve|deny`; model name routed verbatim (locked by `test_agent_brain.py`) | 16 |
 
 ## Residual risks (accepted)
 - OSINT source reliability varies → evidence captures exact source + timestamp + confidence.

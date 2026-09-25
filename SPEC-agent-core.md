@@ -1,8 +1,10 @@
 # Spec: agent-core
 
 ## Objective
-ReAct-style loop: feed the goal + tool results to the brain (Colab 27B uncensored via
-`PG_COLAB_OLLAMA_URL`, fallback local Ollama, then honest `blocked`), the model returns a
+ReAct-style loop: feed the goal + tool results to the brain (Colab 27B uncensored
+via `PG_COLAB_OLLAMA_URL`, **model = `PG_AGENT_MODEL` default `qwen3.8-27b-unc`**
+(Qwen3.8-27B-Uncensored abliterated; alias created in the Colab notebook),
+fallback local Ollama, then honest `blocked`), the model returns a
 JSON action `{thought, action:{tool,args}}` or `{thought, stop, answer}`; the loop runs the
 tool and repeats until stop or the step budget is exhausted.
 

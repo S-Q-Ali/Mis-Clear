@@ -45,7 +45,11 @@ Deterministic security rules; AI assists reasoning but never lowers safety.
 - **Brain is a proposer, never an actor.** The ReAct loop (`loop.py`) only
   executes allowlisted tools whose args are validated against the spec; web and
   model content is wrapped as `<untrusted>` data and can never add tools, run
-  shell, or follow URLs (the registry ships no shell/URL/exec tools).
+  shell, or follow URLs (the registry ships no shell/URL/exec tools). This holds
+  even with the user-chosen **uncensored brain** (`PG_AGENT_MODEL`, e.g.
+  `qwen3.8-27b-unc` / Qwen3.8-27B-Uncensored, refusals 98/100→12/100): its model
+  name is forwarded verbatim by `AgentBrain`, but its output is treated as data,
+  never instructions — T17 in THREAT_MODEL.md.
 - **Evidence-only findings.** No claim can become evidence unless a tool
   actually returned it; model text is opinion.
 - **Deterministic removal proposals.** `propose_removals` maps real tool-returned

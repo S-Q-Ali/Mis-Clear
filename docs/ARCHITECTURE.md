@@ -109,7 +109,8 @@ Heavy AI never blocks the app. `ModelRouter` (`app/backend/services/model_router
   username_lookup, web_search, dns, whois, github_user, site_check, photo_*,
   graph_expand, breach_check); `breach.py` k-anonymity (5-hex SHA-1 prefix,
   ephemeral, never plaintext); `model.py` AgentResult/AgentStep; `brain.py`
-  AgentBrain (Colab 27B → local Ollama → graceful block); `loop.py` ReAct loop
+  AgentBrain (Colab 27B uncensored via `PG_AGENT_MODEL` → local Ollama →
+  graceful block; model name forwarded verbatim); `loop.py` ReAct loop
   (allowlist, arg allowlisting, step budget, per-step timeout, deterministic
   removal proposals); `conversation_store.py` persisted redacted audit
   conversations; `removal_flow.py` confirm-gated removals. API in

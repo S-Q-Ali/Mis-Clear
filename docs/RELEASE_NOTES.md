@@ -1,5 +1,30 @@
 # Release Notes — Privacy Guardian
 
+## v0.6.0 (2026-09-25) — Uncensored agent brain on Colab
+
+- **Agentic self-data investigator** (Phase 15-agent, chat-driven dig into the
+  user's OWN public data): strict-JSON tool registry (`registry.py`) wrapping
+  the deterministic adapters (email/username/web/dns/whois/github/site_check/
+  photo/graph/breach), k-anonymity breach check (`breach.py`, 5-hex SHA-1
+  prefix, ephemeral, `PG_BREACH_API_URL`), ReAct loop with allowlist + arg
+  allowlisting + step budget + `<untrusted>` result wrapping, SSE chat
+  (`/api/agent/chat`) with persisted redacted conversations (V5 schema), and
+  confirm-gated removals (`POST /api/agent/confirm`, approve|deny only — no
+  confirm, no action). Injection/hybrid-gate security suite.
+- **Uncensored brain** (`PG_AGENT_MODEL`, default `qwen3.8-27b-unc`):
+  `AgentBrain` forwards the chosen model verbatim to the approved Colab Ollama
+  tunnel; the Colab notebook now pulls
+  `hf.co/JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` (quant `UNCENSORED_QUANT`,
+  default `Q4_K_M`), creates the `qwen3.8-27b-unc` alias via the Ollama
+  `/api/create` endpoint, and prints the `PG_AGENT_MODEL` value next to the
+  tunnel URL. Model output stays **data, never instructions** (T17 added to
+  THREAT_MODEL.md; brain routing contract locked by `test_agent_brain.py`).
+- **Health-ping fix**: `api.ts` `getHealth()` pointed at `/api/health` (404);
+  canonical route is `/health`. Guarded by `test_health.py` (`/health` 200,
+  `/api/health` 404).
+- **Verification**: 411 pytest functions green; ruff clean (`app tests`); frontend
+  `tsc -b && vite build` + oxlint clean.
+
 ## v0.5.0 (2026-09-24) — Honest filing bundle (Phase 17)
 
 - **Filing bundle download** (`app/backend/services/filing_bundle.py` +
