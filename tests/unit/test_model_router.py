@@ -86,6 +86,31 @@ def test_ollama_generate_raises_on_http_error():
     assert resp.status_code == 503
 
 
+def test_ollama_generate_forwards_format(monkeypatch):
+    recorded: dict = {}
+
+    class FakeClient:
+        def __init__(self, timeout=None):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def post(self, url, json):
+            recorded["json"] = json
+            return httpx.Response(
+                200, json={"response": "ok", "done": True}, request=httpx.Request("POST", url)
+            )
+
+    monkeypatch.setattr("app.backend.services.model_router.httpx.Client", FakeClient)
+    backend = OllamaBackend("t", "http://ollama:11434", "m", timeout=2, retries=0)
+    backend.generate("p", system="s", format="json")
+    assert recorded["json"]["format"] == "json"
+
+
 def test_default_router_has_local_backend_only_without_colab_url(monkeypatch):
     from app.backend.config import Settings
 

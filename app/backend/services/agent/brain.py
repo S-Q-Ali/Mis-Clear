@@ -39,5 +39,5 @@ class AgentBrain:
                 model=self.model,
                 timeout=timeout,
             )
-        resp = backend.generate(system=system, prompt=prompt)
+        resp = backend.generate(system=system, prompt=prompt, format="json")
         return resp.text

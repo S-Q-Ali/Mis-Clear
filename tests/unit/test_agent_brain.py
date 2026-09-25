@@ -33,11 +33,12 @@ class _StubRouter:
 
 
 def _capture_generate(monkeypatch) -> dict:
-    """Stub OllamaBackend.generate to record self.model instead of hitting HTTP."""
+    """Stub OllamaBackend.generate to record self.model + kwargs instead of HTTP."""
     captured: dict = {}
 
     def fake_generate(self, prompt, system=None, **kwargs):
         captured["model"] = self.model
+        captured["kwargs"] = kwargs
         return ModelResponse(text="ok", model=self.model, backend=self.name, duration_ms=1)
 
     monkeypatch.setattr(model_router.OllamaBackend, "generate", fake_generate)
@@ -66,3 +67,11 @@ def test_brain_no_backend_raises_unavailable():
     brain = AgentBrain(router=_StubRouter(backend=None), model=MODEL_UNCENSORED)
     with pytest.raises(ModelUnavailableError):
         brain.complete("system", "prompt")
+
+
+def test_brain_forces_strict_json_output(monkeypatch):
+    captured = _capture_generate(monkeypatch)
+    backend = OllamaBackend("colab-ollama", "http://127.0.0.1:11434", model="qwen3:8b")
+    brain = AgentBrain(router=_StubRouter(backend), model="")
+    brain.complete("system", "prompt")
+    assert captured["kwargs"].get("format") == "json"
