@@ -29,7 +29,22 @@
   verifiable; the notebook alias cell is best-effort (idempotent, prints the
   real error body, falls back to the full `hf.co/...` tag as
   `AGENT_BRAIN_MODEL`).
-- **Verification**: 412 pytest functions green; ruff clean (`app tests`); frontend
+- **Uncensored 27B syntax + tool listing fixes (live smoke-verified)**: (a)
+  `AgentBrain.complete` now forwards `format:"json"` (allowed by
+  `OllamaBackend`), so the thinking-mode 27B emits grammar-constrained valid
+  JSON instead of prose — the loop's `parse_action` never sees a "parse
+  failure" anymore; (b) the system prompt now embeds the **exact tool
+  manifest** (`build_system_prompt`, names + arg keys + descriptions) so the
+  model stops inventing tool names like `read_file`. Tier B live smoke
+  (Colab tunnel → laptop backend → real
+  `hf.co/JonathanColetti/Qwen3.8-27B-Uncensored-GGUF:Q4_K_M`): direct
+  `/api/generate` probe 200 (warm, ~47 tok/s), `/api/agent/status`
+  `backend=colab-ollama` + full model, and an end-to-end `graph_expand` chat
+  that planned the tool call, executed it, surfaced evidence, and answered
+  verbatim. Note: the current Colab has **no `qwen3.8-27b-unc` alias**
+  (`/api/create` 400, `generate` 404) — `PG_AGENT_MODEL` must stay the full
+  `hf.co/...` tag.
+- **Verification**: 415 pytest functions green; ruff clean (`app tests`); frontend
   `tsc -b && vite build` + oxlint clean.
 
 ## v0.5.0 (2026-09-24) — Honest filing bundle (Phase 17)

@@ -35,7 +35,7 @@ and coverage gaps.
 | 15 | Audit | ✅ final audit + release notes (235 tests) |
 | 16 | Removal | ✅ NSFW/photo‑nsfw async job + categorized takedown procedures + automated removal executor with human‑gate + re‑verify (see below) |
 | 17 | Filing bundle | ✅ deterministic, honest, real‑rows‑only ZIP export of a scan (findings/actions/executions/audit/graph/risk + honesty manifest) |
-| 15‑agent | Agentic self‑data investigator | ✅ chat‑driven personal‑data digger: strict‑JSON tool registry (`SPEC-agent-tools`), ReAct loop with allowlist + arg validation (`SPEC-agent-core`), SSE chat + 429 rate gate + redacted persisted conversations (`SPEC-agent-api`), React chat UI with streamed evidence + confirm buttons (`SPEC-agent-ui`), confirm‑gated removals → pending actions (no confirm → no action) (`SPEC-removal-flow`), PG_BREACH_API_URL k‑anonymity wiring (`SPEC-self-data`), injection/hybrid‑gate security suite (`SPEC-hardening`), uncensored‑brain model routing (`PG_AGENT_MODEL`, test_agent_brain.py) — 412 tests |
+| 15‑agent | Agentic self‑data investigator | ✅ chat‑driven personal‑data digger: strict‑JSON tool registry (`SPEC-agent-tools`), ReAct loop with allowlist + arg validation (`SPEC-agent-core`), SSE chat + 429 rate gate + redacted persisted conversations (`SPEC-agent-api`), React chat UI with streamed evidence + confirm buttons (`SPEC-agent-ui`), confirm‑gated removals → pending actions (no confirm → no action) (`SPEC-removal-flow`), PG_BREACH_API_URL k‑anonymity wiring (`SPEC-self-data`), injection/hybrid‑gate security suite (`SPEC-hardening`), uncensored‑brain model routing (`PG_AGENT_MODEL`, test_agent_brain.py) — 415 tests |
 
 ## Current implementation
 
@@ -194,7 +194,7 @@ and coverage gaps.
   approve/deny buttons, conversation history readback. Security suite
   `tests/security/test_agent_injection.py`.
 - **Tests**: `tests/unit/*`, `tests/integration/*`, `tests/security/*`, `tests/e2e/*`,
-   `tests/failure_recovery/*`; 412 pytest functions green (incl. the agent:
+   `tests/failure_recovery/*`; 415 pytest functions green (incl. the agent:
    tools/loop/removal/brain-model-routing unit + SSE chat/confirm integration + injection security
    suite; the 3 dispatch/settings env‑gated cases deselected)
 - **E2E** (`tests/e2e/`, Phase 14): real uvicorn server on loopback + real SQLite
