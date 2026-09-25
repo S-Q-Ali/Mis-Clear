@@ -40,6 +40,15 @@ _JSON_BLOCK_RE = re.compile(r"\{.*\}", re.DOTALL)
 HISTORY_WINDOW = 12
 
 
+def build_system_prompt(tools: dict[str, ToolSpec]) -> str:
+    """System prompt + the exact tool manifest so the model never invents names."""
+    lines = [SYSTEM_PROMPT, "", "Available tools (ONLY these names, exact args):"]
+    for tool in tools.values():
+        arg_names = ", ".join(sorted(tool.args))
+        lines.append(f"- {tool.name}({arg_names}): {tool.description}")
+    return "\n".join(lines)
+
+
 def parse_action(text: str) -> AgentAction | None:
     """Parse the model's single-JSON reply with light recovery."""
     if not text or not text.strip():
@@ -190,7 +199,7 @@ def run_agent(
                 prompt += "Progress so far:\n" + "\n".join(window) + "\n\n"
             prompt += "What is your next action? Reply with ONLY the JSON object."
             try:
-                future = executor.submit(brain.complete, SYSTEM_PROMPT, prompt)
+                future = executor.submit(brain.complete, build_system_prompt(tools), prompt)
                 text = future.result(timeout=per_step)
             except Exception as exc:  # noqa: BLE001 — loop boundary: never raise to the API
                 add(

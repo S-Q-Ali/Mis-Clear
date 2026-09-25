@@ -55,6 +55,7 @@ def client(tmp_path, monkeypatch):
     import app.backend.config as cfg
     import app.backend.database.engine as eng
     import app.backend.services.job_dispatcher as jd
+    import app.backend.services.model_router as mr
 
     test_settings = cfg.Settings(
         database_path=str(tmp_path / "api.db"),
@@ -62,10 +63,14 @@ def client(tmp_path, monkeypatch):
         colab_ollama_url="",
         agent_enabled=True,
         agent_rate_limit_per_minute=100,
+        agent_model="",
+        ollama_reasoning_model="qwen3:8b",
     )
     monkeypatch.setattr(cfg, "settings", test_settings)
+    monkeypatch.setattr(api, "settings", test_settings)
     monkeypatch.setattr(eng, "settings", test_settings)
     monkeypatch.setattr(jd, "settings", test_settings)
+    monkeypatch.setattr(mr, "settings", test_settings)
 
     eng.engine = eng.build_engine(test_settings.database_path)
     eng.SessionLocal = sessionmaker(bind=eng.engine, autoflush=False, autocommit=False)

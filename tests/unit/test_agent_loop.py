@@ -185,3 +185,16 @@ def test_system_prompt_contains_untrusted_rule():
     system, _prompt = brain.calls[0]
     assert "<untrusted>" in SYSTEM_PROMPT or "untrusted" in system
     assert "Reply with exactly ONE JSON object" in system
+
+
+def test_system_prompt_lists_available_tools():
+    tools = {
+        "dns": make_tool("dns"),
+        "web_search": make_tool("web_search"),
+    }
+    brain = FakeBrain([], available=True)
+    run_agent("x", tools, brain, max_steps=1)
+    system, _prompt = brain.calls[0]
+    assert "- dns(target):" in system
+    assert "- web_search(target):" in system
+    assert "shell(" not in system
