@@ -105,7 +105,7 @@ export const getLogs = (page = 1, pageSize = 30) =>
   api<Paginated<LogEntry>>(`/api/logs?page=${page}&pageSize=${pageSize}`)
 export const getWorkerStatus = () => api<WorkerStatus>('/api/workers')
 export const getSettings = () => api<Settings>('/api/settings')
-export const getHealth = () => api<{ status: string }>('/api/health')
+export const getHealth = () => api<{ status: string }>('/health')
 
 export const getAgentStatus = () => api<AgentStatus>('/api/agent/status')
 export const getAgentConversations = () => api<AgentConversation[]>('/api/agent/conversations')
