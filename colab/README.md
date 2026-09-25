@@ -23,11 +23,13 @@ Optional heavy-computation worker. The laptop stays the system of record.
 1. Open `privacy_guardian_worker.ipynb` in Colab and run the 7 sections:
    1. Configuration — set `COLAB_JOB_DISPATCHER_URL`
    2. Install Ollama (binary install, server on `0.0.0.0:11434`)
-   3. Download AI models (`qwen3:8b` + `gemma3:4b` by default)
+   3. Download AI models (`qwen3:8b` + `gemma3:4b` + uncensored 27B `qwen3.8-27b-unc` by
+      default; quant via `UNCENSORED_QUANT` — T4 `Q4_K_M`, L4 `Q5_K_M`, A100 `Q6_K`/`Q8_0`)
    4. Clone repo + deps (`git clone` + `sys.path` + `httpx`)
    5. Capability probe (GPU/CPU/models advertisement)
    6. Dispatch loop — poll-proc-ack vs the laptop dispatcher
-   7. Expose Colab Ollama (optional `cloudflared` tunnel for `PG_COLAB_OLLAMA_URL`)
+   7. Expose Colab Ollama (optional `cloudflared` tunnel for `PG_COLAB_OLLAMA_URL` +
+      prints `PG_AGENT_MODEL=qwen3.8-27b-unc` for the agent brain)
 2. Set `COLAB_JOB_DISPATCHER_URL` to a tunnel exposing the laptop's `127.0.0.1:8000`
    (e.g. `cloudflared tunnel --url http://127.0.0.1:8000`); the worker polls
    `GET {dispatcher}/jobs/next` and acks `POST {dispatcher}/jobs/{job_id}/result`
