@@ -96,7 +96,8 @@ Tested with synthetic data only (never real personal data).
       `POST /jobs/{job_id}/result`). Refuses to run without a dispatcher URL.
    7. **Expose Colab Ollama (optional)** — `cloudflared` tunnel to port 11434;
       prints the `https://<...>.trycloudflare.com` URL for `PG_COLAB_OLLAMA_URL`
-      and reminders `PG_AGENT_MODEL=qwen3.8-27b-unc` for the agent brain.
+      and the resolved `AGENT_BRAIN_MODEL` (alias `qwen3.8-27b-unc` if created,
+      else the full `hf.co/...` tag) for `PG_AGENT_MODEL`.
 2. Two tunnels, one per direction:
    - **Job dispatcher** — created on the **laptop**, points at `127.0.0.1:8000`
      (e.g. `cloudflared tunnel --url http://127.0.0.1:8000`). Colab polls it via
@@ -110,5 +111,10 @@ Tested with synthetic data only (never real personal data).
    PG_COLAB_JOB_DISPATCHER_URL=https://<dispatcher>/api # job transport
    ```
    With either set, new scans default to `hybrid` and AI work is Colab-first.
+   For the uncensored 27B agent brain, set `PG_AGENT_MODEL` to the value the
+   tunnel cell prints (`AGENT_BRAIN_MODEL`). On a slow GPU (T4, Q4_K_M) a cold
+   first step can exceed the 120s default — raise
+   `PG_AGENT_STEP_TIMEOUT_SECONDS` and `PG_OLLAMA_TIMEOUT_SECONDS` (180-300)
+   if agent steps time out.
 4. Restart the backend. The Workers page shows Colab availability; the Dashboard
    AI mode becomes `hybrid` once a Colab endpoint is configured.

@@ -22,7 +22,14 @@
 - **Health-ping fix**: `api.ts` `getHealth()` pointed at `/api/health` (404);
   canonical route is `/health`. Guarded by `test_health.py` (`/health` 200,
   `/api/health` 404).
-- **Verification**: 411 pytest functions green; ruff clean (`app tests`); frontend
+- **Tier-B readiness for the 27B brain**: per-step brain budget raised
+  25s → **120s** (`agent_step_timeout_seconds`, env
+  `PG_AGENT_STEP_TIMEOUT_SECONDS`; slow T4 cold starts may need 180-300s);
+  `/api/agent/status` now reports the resolved `model` so the 27B is
+  verifiable; the notebook alias cell is best-effort (idempotent, prints the
+  real error body, falls back to the full `hf.co/...` tag as
+  `AGENT_BRAIN_MODEL`).
+- **Verification**: 412 pytest functions green; ruff clean (`app tests`); frontend
   `tsc -b && vite build` + oxlint clean.
 
 ## v0.5.0 (2026-09-24) — Honest filing bundle (Phase 17)
